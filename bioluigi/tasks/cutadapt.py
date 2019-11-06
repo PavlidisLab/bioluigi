@@ -1,0 +1,2 @@
+class CutAdapters(ExternalProgramTask):
+    pass
