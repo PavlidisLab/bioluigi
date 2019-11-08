@@ -24,14 +24,14 @@ class LocalScheduler(Scheduler):
     """
     Local scheduler.
 
-    Not that this scheduler defines 'cpu' and 'mem' resources to be used
+    Not that this scheduler defines 'cpus' and 'memory' resources to be used
     conjointly with Luigi's [resources] configuration entry.
     """
     blurb = 'local'
 
     @property
     def resources(self):
-        return {'cpus': self.cpus, 'mem': self.mem}
+        return {'cpus': self.cpus, 'memory': self.memory}
 
     @classmethod
     def run_task(self, task):
@@ -60,9 +60,8 @@ class SlurmScheduler(Scheduler):
             '--cpus-per-task', str(task.cpus)]
         args = list(map(str, task.program_args()))
         env = task.program_environment()
-        logger.info('Running command {}'.format(' '.join(args)))
-        proc = Popen(['srun'] + srun_args + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-        logger.info('Running slurm command {}'.format(' '.join(['srun'] + srun_args + args)))
+        logger.info('Running slurm command {}'.format(' '.join(['srun'] + srun_args + task.scheduler_extra_args + args)))
+        proc = Popen(['srun'] + srun_args + task.scheduler_extra_args + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
@@ -74,16 +73,13 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     """
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
-
-    The :cpus: defines the number of CPUs used for the task.
-
-    The :memory: is defined in gigabytes.
     """
-    scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], default='local')
+    scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], default='local', description='Scheduler to use for running the task')
+    scheduler_extra_args = luigi.ListParameter(positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
-    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False)
-    cpus = luigi.IntParameter(default=1, positional=False, significant=False)
-    memory = luigi.FloatParameter(default=1, positional=False, significant=False)
+    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')
+    cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
+    memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
 
     def run(self):
         return Scheduler.fromblurb(self.scheduler).run_task(self)
