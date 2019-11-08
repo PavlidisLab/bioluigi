@@ -31,7 +31,7 @@ class LocalScheduler(Scheduler):
 
     @property
     def resources(self):
-        return {'cpu': self.cpus, 'mem': self.mem}
+        return {'cpus': self.cpus, 'mem': self.mem}
 
     @classmethod
     def run_task(self, task):
@@ -57,7 +57,7 @@ class SlurmScheduler(Scheduler):
         srun_args = [
             '--time', '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
-            '--cpus-per-task', task.cpus]
+            '--cpus-per-task', str(task.cpus)]
         args = list(map(str, task.program_args()))
         env = task.program_environment()
         logger.info('Running command {}'.format(' '.join(args)))
@@ -75,15 +75,15 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
 
-    The :cpu: defines the number of CPUs used for the task.
+    The :cpus: defines the number of CPUs used for the task.
 
-    The :memory: is defined in megabytes.
+    The :memory: is defined in gigabytes.
     """
     scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], default='local')
 
-    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1))
-    cpus = luigi.IntParameter(default=1)
-    memory = luigi.FloatParameter(default=1)
+    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False)
+    cpus = luigi.IntParameter(default=1, positional=False, significant=False)
+    memory = luigi.FloatParameter(default=1, positional=False, significant=False)
 
     def run(self):
         return Scheduler.fromblurb(self.scheduler).run_task(self)
