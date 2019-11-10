@@ -61,7 +61,7 @@ class SlurmScheduler(Scheduler):
         args = list(map(str, task.program_args()))
         env = task.program_environment()
         logger.info('Running slurm command {}'.format(' '.join(['srun'] + srun_args + task.scheduler_extra_args + args)))
-        proc = Popen(['srun'] + srun_args + task.scheduler_extra_args + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        proc = Popen(['srun'] + srun_args + list(task.scheduler_extra_args) + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
@@ -75,7 +75,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     a job scheduler.
     """
     scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], default='local', description='Scheduler to use for running the task')
-    scheduler_extra_args = luigi.ListParameter(positional=False, significant=False, description='Extra arguments to pass to the scheduler')
+    scheduler_extra_args = luigi.ListParameter(default=[], positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
