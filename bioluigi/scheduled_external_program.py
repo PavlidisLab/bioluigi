@@ -74,7 +74,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
     """
-    scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], default='local', description='Scheduler to use for running the task')
+    scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, default='local', description='Scheduler to use for running the task')
     scheduler_extra_args = luigi.ListParameter(default=[], positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')

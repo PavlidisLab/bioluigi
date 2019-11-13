@@ -1,96 +1,128 @@
 import luigi
-from luigi.contrib.external_program import ExternalProgramTask
 from os.path import join
 
-class AnnotateVcf(ExternalProgramTask):
-    vcf_file = luigi.Parameter()
-    annotated_vcf_file = luigi.Parameter()
+from ..scheduled_external_program import ScheduledExternalProgramTask
+from ..config import bioluigi
+
+cfg = bioluigi()
+
+class BcftoolsTask(ScheduledExternalProgramTask):
+    task_namespace = 'bcftools'
+
+    input_file = luigi.Parameter()
+
+    include = luigi.OptionalParameter(positional=False, default='')
+    exclude = luigi.OptionalParameter(positional=False, default='')
+    regions_file = luigi.OptionalParameter(positional=False, default='')
+    apply_filters = luigi.OptionalParameter(positional=False, default='')
+
+    def subcommand_args(self):
+        raise NotImplementedError
+
+    def subcommand_post_input_args(self):
+        return []
+
+    def program_args(self):
+        args = [cfg.bcftools_bin]
+
+        if self.include:
+            args.extend(['-i', self.include])
+
+        if self.exclude:
+            args.extend(['-e', self.exclude])
+
+        if self.regions_file:
+            args.extend(['-R', self.regions_file])
+
+        if self.apply_filters is not None:
+            args.extend(['-f', self.apply_filters])
+
+        args.extend(['--threads', self.cpus])
+
+        args.extend(self.subcommand_args())
+
+        args.append(self.input_file)
+
+        args.extend(self.subcommand_post_input_args())
+
+        return args
+
+class View(BcftoolsTask):
+    output_file = luigi.Parameter()
+    output_format = luigi.Parameter(positional=False, default='z')
+
+    def subcommand_args(self):
+        return ['view',
+            '--output-type', self.output_format,
+            '--output', self.output_file]
+
+    def output(self):
+        return luigi.LocalTarget(self.output_file)
+
+class Annotate(BcftoolsTask):
+    output_file = luigi.Parameter()
+    output_format = luigi.Parameter(positional=False, default='z')
+
+    # options given an annotation file
+    annotations_file = luigi.OptionalParameter(positional=False, default='')
+
+    columns = luigi.ListParameter(positional=False, default=[])
 
     rename_chrs = luigi.OptionalParameter(positional=False, default='')
 
-    # options given an annotation file
-    annotations_vcf_file = luigi.OptionalParameter(positional=False, default='')
-    columns = luigi.ListParameter(positional=False)
-
-    def program_args(self):
-        args = ['bcftools', 'annotate']
+    def subcommand_args(self):
+        args = ['annotate']
 
         if self.rename_chrs is not None:
             args.extend(['--rename-chrs', self.rename_chrs])
 
-        if self.annotations_vcf_file:
-            args.extend(['-a', self.annotations_vcf_file])
+        if self.annotations_file:
+            args.extend(['-a', self.annotations_file])
             args.extend(['-c', ','.join(self.columns)])
 
         args.extend([
-            '-Oz',
-            '-o', self.annotated_vcf_file,
-            self.vcf_file])
+            '--output-type', self.output_format,
+            '--output', self.output_file])
 
         return args
 
     def output(self):
-        return luigi.LocalTarget(self.annotated_vcf_file)
+        return luigi.LocalTarget(self.output_file)
 
-class SortVcf(ExternalProgramTask):
-    vcf_file = luigi.Parameter()
-    sorted_vcf_file = luigi.Parameter()
+class Sort(BcftoolsTask):
+    output_file = luigi.Parameter()
+    output_format = luigi.Parameter(positional=False, default='z')
 
     tmp_dir = luigi.Parameter(default='/tmp', significant=False)
 
-    def program_args(self):
-        return ['bcftools', 'sort', self.vcf_file,
-                '-Oz',
-                '--output-file', self.output().path,
-                '--temp-dir', self.tmp_dir]
+    def subcommand_args(self):
+        return ['sort',
+                '--temp-dir', self.tmp_dir,
+                '--output-type', self.output_format,
+                '--output', self.output_file]
 
     def output(self):
-        return luigi.LocalTarget(self.sorted_vcf_file)
+        return luigi.LocalTarget(self.output_file)
 
-
-class IndexVcf(ExternalProgramTask):
+class Index(BcftoolsTask):
     """
     Use tabix to create a tabular index for a VCF.
     """
-    vcf_file = luigi.Parameter()
-
-    def program_args(self):
-        return ['tabix', '-p', 'vcf', self.vcf_file]
+    def subcommand_args(self):
+        return ['index', '--tbi']
 
     def output(self):
-        return luigi.LocalTarget(self.vcf_file + '.tbi')
+        return luigi.LocalTarget(self.input_file + '.tbi')
 
-class ApplyFilterVcf(ExternalProgramTask):
-    """Apply the filter described in the VCF."""
-    vcf_file = luigi.Parameter()
-    filtered_vcf_file = luigi.Parameter()
-    regions_file = luigi.Parameter()
-
-    def program_args(self):
-        args = ['bcftools', 'view']
-
-        if self.regions_file is not None:
-            args.extend(['--regions-file', self.regions_file])
-
-        args.extend([
-            '-f', 'PASS',
-            '-Oz',
-            '-o', self.output().path])
-
-        args.append(self.vcf_file)
-
-        return args
-
-    def output(self):
-        return luigi.LocalTarget(self.filtered_vcf_file)
-
-class IntersectVcf(ExternalProgramTask):
-    vcf_file = luigi.Parameter()
-    vcf_file2 = luigi.Parameter()
+class Intersect(BcftoolsTask):
+    input_file2 = luigi.Parameter()
     output_dir = luigi.Parameter()
 
-    def program_args(self):
-        return ['bcftools', 'isec', '-p', self.output_dir, self.vcf_file, self.vcf_file2]
+    def subcommand_args(self):
+        return ['isec', '-p', self.output_dir]
+
+    def subcommand_post_input_args(self):
+        return [self.input_file2]
 
     def output(self):
-        return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf'.format(i))) for i in range(4)]
+        return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
