@@ -29,10 +29,6 @@ class LocalScheduler(Scheduler):
     """
     blurb = 'local'
 
-    @property
-    def resources(self):
-        return {'cpus': self.cpus, 'memory': self.memory}
-
     @classmethod
     def run_task(self, task):
         args = list(map(str, task.program_args()))
@@ -80,6 +76,13 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
+
+    @property
+    def resources(self):
+        if self.scheduler == 'local':
+            return {'cpus': self.cpus, 'memory': self.memory}
+        else:
+            return {}
 
     def run(self):
         return Scheduler.fromblurb(self.scheduler).run_task(self)
