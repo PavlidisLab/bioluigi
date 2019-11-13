@@ -8,6 +8,15 @@ import logging
 logger = logging.getLogger('luigi-interface')
 
 class Scheduler(object):
+    """
+    :blurb: Short name by with the scheduler is referred to
+    :allocates_resources: Indicate if the scheduler allocates its own resources
+    or if it should be done through Luigi's resource management system.
+    """
+
+    blurb = None
+    allocates_resources = False
+
     @classmethod
     def fromblurb(cls, blurb):
         for subcls in cls.__subclasses__():
@@ -18,7 +27,7 @@ class Scheduler(object):
 
     @classmethod
     def run_task(self, task):
-        raise NotImplemented
+        raise NotImplementedError
 
 class LocalScheduler(Scheduler):
     """
@@ -47,6 +56,8 @@ class SlurmScheduler(Scheduler):
     Scheduler based on Slurm https://slurm.schedmd.com/
     """
     blurb = 'slurm'
+    allocates_resources = True
+
     @classmethod
     def run_task(self, task):
         secs = int(task.walltime.total_seconds())
@@ -79,10 +90,10 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
 
     @property
     def resources(self):
-        if self.scheduler == 'local':
-            return {'cpus': self.cpus, 'memory': self.memory}
+        if Scheduler.fromblurb(self.scheduler).allocates_resources:
+            return {'{}_jobs'.format(self.scheduler): 1}
         else:
-            return {}
+            return {'cpus': self.cpus, 'memory': self.memory}
 
     def run(self):
         return Scheduler.fromblurb(self.scheduler).run_task(self)
