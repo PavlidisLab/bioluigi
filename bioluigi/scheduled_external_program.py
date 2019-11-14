@@ -10,12 +10,10 @@ logger = logging.getLogger('luigi-interface')
 class Scheduler(object):
     """
     :blurb: Short name by with the scheduler is referred to
-    :allocates_resources: Indicate if the scheduler allocates its own resources
     or if it should be done through Luigi's resource management system.
     """
 
     blurb = None
-    allocates_resources = False
 
     @classmethod
     def fromblurb(cls, blurb):
@@ -23,40 +21,17 @@ class Scheduler(object):
             if subcls.blurb == blurb:
                 return subcls()
         else:
-            raise ValueError('{} is not a reckognized scheduler.'.format(blurb))
+            raise ValueError('{} is not a recognized scheduler.'.format(blurb))
 
     @classmethod
     def run_task(self, task):
         raise NotImplementedError
-
-class LocalScheduler(Scheduler):
-    """
-    Local scheduler.
-
-    Not that this scheduler defines 'cpus' and 'memory' resources to be used
-    conjointly with Luigi's [resources] configuration entry.
-    """
-    blurb = 'local'
-
-    @classmethod
-    def run_task(self, task):
-        args = list(map(str, task.program_args()))
-        env = task.program_environment()
-        logger.info('Running command {}'.format(' '.join(args)))
-        proc = Popen(args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-        stdout, stderr = proc.communicate()
-        if proc.returncode != 0:
-            raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
-        if task.capture_output:
-            logger.info('Program stdout:\n{}'.format(stdout))
-            logger.info('Program stderr:\n{}'.format(stderr))
 
 class SlurmScheduler(Scheduler):
     """
     Scheduler based on Slurm https://slurm.schedmd.com/
     """
     blurb = 'slurm'
-    allocates_resources = True
 
     @classmethod
     def run_task(self, task):
@@ -67,7 +42,7 @@ class SlurmScheduler(Scheduler):
             '--cpus-per-task', str(task.cpus)]
         args = list(map(str, task.program_args()))
         env = task.program_environment()
-        logger.info('Running slurm command {}'.format(' '.join(['srun'] + srun_args + task.scheduler_extra_args + args)))
+        logger.info('Running Slurm command {}'.format(' '.join(['srun'] + srun_args + list(task.scheduler_extra_args) + args)))
         proc = Popen(['srun'] + srun_args + list(task.scheduler_extra_args) + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
@@ -81,7 +56,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
     """
-    scheduler = luigi.ChoiceParameter(choices=[cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, default='local', description='Scheduler to use for running the task')
+    scheduler = luigi.ChoiceParameter(choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, default='local', description='Scheduler to use for running the task')
     scheduler_extra_args = luigi.ListParameter(default=[], positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')
@@ -90,10 +65,13 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
 
     @property
     def resources(self):
-        if Scheduler.fromblurb(self.scheduler).allocates_resources:
-            return {'{}_jobs'.format(self.scheduler): 1}
-        else:
+        if self.scheduler == 'local':
             return {'cpus': self.cpus, 'memory': self.memory}
+        else:
+            return {'{}_jobs'.format(self.scheduler): 1}
 
     def run(self):
-        return Scheduler.fromblurb(self.scheduler).run_task(self)
+        if self.scheduler == 'local':
+            return super(ScheduledExternalProgramTask, self).run()
+        else:
+            return Scheduler.fromblurb(self.scheduler).run_task(self)
