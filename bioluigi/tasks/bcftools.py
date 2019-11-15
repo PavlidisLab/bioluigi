@@ -16,6 +16,9 @@ class BcftoolsTask(ScheduledExternalProgramTask):
     regions_file = luigi.OptionalParameter(positional=False, default='')
     apply_filters = luigi.OptionalParameter(positional=False, default='')
 
+    # FIXME: the '--threads' flag does not seem to work
+    cpus = 1
+
     def subcommand_args(self):
         raise NotImplementedError
 
@@ -36,8 +39,6 @@ class BcftoolsTask(ScheduledExternalProgramTask):
 
         if self.apply_filters is not None:
             args.extend(['-f', self.apply_filters])
-
-        args.extend(['--threads', self.cpus])
 
         args.extend(self.subcommand_args())
 
