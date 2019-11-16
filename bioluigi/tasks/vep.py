@@ -13,6 +13,8 @@ class Annotate(ExternalProgramTask):
     cache = luigi.BoolParameter(default=False, positional=False, significant=False)
     offline = luigi.BoolParameter(default=False, positional=False, significant=False)
 
+    buffer_size = luigi.IntParameter(default=5000, positional=False, significant=False)
+
     species = luigi.Parameter(positional=False)
     assembly = luigi.Parameter(positional=False)
 
@@ -34,8 +36,8 @@ class Annotate(ExternalProgramTask):
         if self.offline:
             args.append('--offline')
 
-        if cfg.vep_cache_dir is not None:
-            args.extend(['--dir', cfg.vep_cache_dir])
+        if cfg.vep_dir is not None:
+            args.extend(['--dir', cfg.vep_dir])
 
         args.extend(self.extra_args)
 
