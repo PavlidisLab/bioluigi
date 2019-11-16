@@ -56,16 +56,17 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
     """
-    scheduler = luigi.ChoiceParameter(choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, default='local', description='Scheduler to use for running the task')
+    scheduler = luigi.ChoiceParameter(default='local', choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
     scheduler_extra_args = luigi.ListParameter(default=[], positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
-    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(hours=1), positional=False, significant=False, description='Amout of time to allocate for the task')
+    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(days=1), positional=False, significant=False, description='Amout of time to allocate for the task')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
 
     @property
     def resources(self):
         if self.scheduler == 'local':
+            # local_jobs is actually constrained by the number of workers
             return {'cpus': self.cpus, 'memory': self.memory}
         else:
             return {'{}_jobs'.format(self.scheduler): 1}
