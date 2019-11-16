@@ -1,5 +1,5 @@
 import luigi
-from luigi.contrib.external_program import ExternalProgramTask, ExternalProgramRunError
+from luigi.contrib.external_program import ExternalProgramTask, ExternalProgramRunError, ExternalProgramRunContext
 from subprocess import Popen, PIPE, check_call
 import os
 import datetime
@@ -48,7 +48,8 @@ class SlurmScheduler(Scheduler):
         env = task.program_environment()
         logger.info('Running Slurm command {}'.format(' '.join(['srun'] + srun_args + list(task.scheduler_extra_args) + args)))
         proc = Popen(['srun'] + srun_args + list(task.scheduler_extra_args) + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-        stdout, stderr = proc.communicate()
+        with ExternalProgramRunContext(proc):
+            stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
         if task.capture_output:
