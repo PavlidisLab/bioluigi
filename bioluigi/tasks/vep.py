@@ -10,7 +10,8 @@ class Annotate(ExternalProgramTask):
     vcf_file = luigi.Parameter()
     annotated_vcf_file = luigi.Parameter()
 
-    offline = luigi.BoolParameter(default=False, positional=False)
+    cache = luigi.BoolParameter(default=False, positional=False, significant=False)
+    offline = luigi.BoolParameter(default=False, positional=False, significant=False)
 
     species = luigi.Parameter(positional=False)
     assembly = luigi.Parameter(positional=False)
@@ -27,10 +28,11 @@ class Annotate(ExternalProgramTask):
                 '--compress_output', 'bgzip',
                 '--output_file', self.output().path]
 
+        if self.cache:
+            args.append('--cache')
+
         if self.offline:
-            args.extend([
-                '--offline',
-                '--cache'])
+            args.append('--offline')
 
         if cfg.vep_cache_dir is not None:
             args.extend(['--dir', cfg.vep_cache_dir])
