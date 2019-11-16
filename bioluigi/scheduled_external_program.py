@@ -5,6 +5,10 @@ import os
 import datetime
 import logging
 
+from .config import bioluigi
+
+cfg = bioluigi()
+
 logger = logging.getLogger('luigi-interface')
 
 class Scheduler(object):
@@ -56,7 +60,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
     a job scheduler.
     """
-    scheduler = luigi.ChoiceParameter(default='local', choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
+    scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
     scheduler_extra_args = luigi.ListParameter(default=[], positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(days=1), positional=False, significant=False, description='Amout of time to allocate for the task')
