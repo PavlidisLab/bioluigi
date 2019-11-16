@@ -20,6 +20,7 @@ class Annotate(ExternalProgramTask):
     def program_args(self):
         args = [cfg.vep_bin,
                 '-i', self.vcf_file,
+                '--format', 'vcf',
                 '--species', self.species,
                 '--assembly', self.assembly,
                 '--vcf',
