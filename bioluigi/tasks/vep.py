@@ -1,12 +1,12 @@
 import luigi
-from luigi.contrib.external_program import ExternalProgramTask
 from os.path import join
 
 from ..config import bioluigi
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
 
-class Annotate(ExternalProgramTask):
+class Annotate(ScheduledExternalProgramTask):
     vcf_file = luigi.Parameter()
     annotated_vcf_file = luigi.Parameter()
 
@@ -17,6 +17,8 @@ class Annotate(ExternalProgramTask):
 
     species = luigi.Parameter(positional=False)
     assembly = luigi.Parameter(positional=False)
+
+    plugins = luigi.ListParameter(default=[], positional=False)
 
     extra_args = luigi.ListParameter(default=[])
 
@@ -38,6 +40,9 @@ class Annotate(ExternalProgramTask):
 
         if cfg.vep_dir is not None:
             args.extend(['--dir', cfg.vep_dir])
+
+        for plugin in self.plugins:
+            args.extend(['--plugin', plugin])
 
         args.extend(self.extra_args)
 
