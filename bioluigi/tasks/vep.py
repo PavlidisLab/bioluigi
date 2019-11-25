@@ -7,6 +7,8 @@ from ..scheduled_external_program import ScheduledExternalProgramTask
 cfg = bioluigi()
 
 class Annotate(ScheduledExternalProgramTask):
+    task_namespace = 'vep'
+
     vcf_file = luigi.Parameter()
     annotated_vcf_file = luigi.Parameter()
 
