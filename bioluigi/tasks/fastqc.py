@@ -7,6 +7,8 @@ from ..config import bioluigi
 cfg = bioluigi()
 
 class GenerateReport(ScheduledExternalProgramTask):
+    task_namespace = 'fastqc'
+
     input_file = luigi.Parameter()
     output_dir = luigi.Parameter()
 
@@ -17,7 +19,7 @@ class GenerateReport(ScheduledExternalProgramTask):
     @staticmethod
     def gen_report_basename(fastq_path):
         sample_name, ext = splitext(basename(fastq_path))
-        if ext == 'gz':
+        if ext == '.gz':
             sample_name, ext = splitext(sample_name)
         return '{}_fastqc.html'.format(sample_name)
 
