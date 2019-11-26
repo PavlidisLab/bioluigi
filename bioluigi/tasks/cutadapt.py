@@ -2,6 +2,9 @@ import datetime
 
 import luigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
+from ..config import bioluigi
+
+cfg = bioluigi()
 
 class CutadaptTask(ScheduledExternalProgramTask):
     """
