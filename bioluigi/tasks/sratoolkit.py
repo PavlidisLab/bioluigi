@@ -1,4 +1,5 @@
 import datetime
+import os
 from os.path import join
 import luigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
@@ -72,8 +73,9 @@ class FastqDump(ScheduledExternalProgramTask):
                 self.input_file]
 
     def output(self):
+        sra_accession, _ = os.path.split(os.path.basename(self.input_file))
         if self.paired_reads:
-            return [luigi.LocalTarget(join(self.output_dir, self.srr + '_1.fastq.gz')),
-                    luigi.LocalTarget(join(self.output_dir, self.srr + '_2.fastq.gz'))]
+            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
+                    luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
         else:
-            return [luigi.LocalTarget(join(self.output_dir, self.srr + '_1.fastq.gz'))]
+            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz'))]
