@@ -1,5 +1,7 @@
 # Bioluigi
 
+[![Documentation Status](https://readthedocs.org/projects/bioluigi/badge/?version=latest)](https://bioluigi.readthedocs.io/en/latest/?badge=latest)
+
 Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines
 
 ## Features
