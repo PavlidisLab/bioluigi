@@ -1,2 +1,3 @@
 luigi
 nose
+m2r
