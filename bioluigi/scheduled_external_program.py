@@ -1,3 +1,12 @@
+"""
+This module provides a flavour of :class:`luigi.contrib.external_program.ExternalProgramTask`
+designed to work with an external scheduler such as Slurm.
+
+It also extend the basic definition of an external task to declare basic
+resource consumptions such as the number of CPU and the amount of memory
+required to execute the task.
+"""
+
 import luigi
 from luigi.contrib.external_program import ExternalProgramTask, ExternalProgramRunError, ExternalProgramRunContext
 from subprocess import Popen, PIPE, check_call
@@ -13,7 +22,7 @@ logger = logging.getLogger('luigi-interface')
 
 class Scheduler(object):
     """
-    :blurb: Short name by with the scheduler is referred to
+    :param blurb: Short name by with the scheduler is referred to
     or if it should be done through Luigi's resource management system.
     """
 
@@ -59,8 +68,8 @@ class SlurmScheduler(Scheduler):
 
 class ScheduledExternalProgramTask(ExternalProgramTask):
     """
-    Variant of luigi.contrib.external_program.ExternalProgramTask that runs on
-    a job scheduler.
+    Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
+    executes the task with a :class:`Scheduler`.
     """
     scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
     scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False, description='Extra arguments to pass to the scheduler')

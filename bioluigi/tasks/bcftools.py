@@ -49,6 +49,9 @@ class BcftoolsTask(ScheduledExternalProgramTask):
         return args
 
 class View(BcftoolsTask):
+    """
+    View a VCF and apply transformations and filters defined in :class:`BcftoolsTask`.
+    """
     output_file = luigi.Parameter()
     output_format = luigi.Parameter(positional=False, default='z')
 
@@ -61,6 +64,9 @@ class View(BcftoolsTask):
         return luigi.LocalTarget(self.output_file)
 
 class Annotate(BcftoolsTask):
+    """
+    Annotate a VCF using bcftools annotate.
+    """
     output_file = luigi.Parameter()
     output_format = luigi.Parameter(positional=False, default='z')
 

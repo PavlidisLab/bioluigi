@@ -5,7 +5,7 @@ import urllib
 
 cfg = bioluigi.config.bioluigi()
 
-class GenerateIndex(ScheduledExternalProgram):
+class GenerateIndex(ScheduledExternalProgramTask):
     genome_fastas = luigi.ListParameter()
     sjdb = luigi.Parameter()
 
