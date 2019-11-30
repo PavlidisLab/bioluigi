@@ -5,6 +5,7 @@ import luigi
 from luigi.task import flatten
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
+from ..tasks.non_atomic import NonAtomicTaskRunContext
 
 cfg = bioluigi()
 
@@ -68,12 +69,8 @@ class FastqDump(ScheduledExternalProgramTask):
                 self.input_file]
 
     def run(self):
-        try:
+        with NonAtomicTaskRunContext(self):
             return super(FastqDump, self).run()
-        except:
-            for out in flatten(self.output()):
-                if out.exists():
-                    out.remove()
 
     def output(self):
         sra_accession, _ = os.path.split(os.path.basename(self.input_file))
