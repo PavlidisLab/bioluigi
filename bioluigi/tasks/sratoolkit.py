@@ -2,6 +2,7 @@ import datetime
 import os
 from os.path import join
 import luigi
+from luigi.task import flatten
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
 
@@ -11,12 +12,8 @@ class Prefetch(ScheduledExternalProgramTask):
     """
     Prefetch a SRA run archive.
 
-    This task is not schedulable because it does not make much sense to
-    allocate cores for a download job. You can however limit the number of
-    concurrent prefetch tasks by setting the 'sra_connections' resource.
-
-    :max_size: Maximum download size in gigabytes
-    :extra_args: Extra argumets to pass to prefetch which can be used to setup
+    :attr max_size: Maximum download size in gigabytes
+    :attr extra_args: Extra argumets to pass to prefetch which can be used to setup
     Aspera.
     """
     task_namespace = 'sratoolkit'
@@ -43,12 +40,10 @@ class FastqDump(ScheduledExternalProgramTask):
     """
     Extract one or multiple FASTQs from a SRA archive
 
-    :param input_file: A file path or a SRA archive
-    :param output_dir: Destination directory for the extracted FASTQs
-    :param paired_reads: Indicate if the original data has paired mates, in
+    :attr input_file: A file path or a SRA archive, or a SRA run accession
+    :attr output_dir: Destination directory for the extracted FASTQs
+    :attr paired_reads: Indicate if the original data has paired mates, in
     which case the output will consist of two files instead of one
-
-    Note that this task does not produce its outputs atomically.
     """
     task_namespace = 'sratoolkit'
 
@@ -71,6 +66,14 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--split-files',
                 '--outdir', self.output_dir,
                 self.input_file]
+
+    def run(self):
+        try:
+            return super(FastqDump, self).run()
+        except:
+            for out in flatten(self.output()):
+                if out.exists():
+                    out.remove()
 
     def output(self):
         sra_accession, _ = os.path.split(os.path.basename(self.input_file))
