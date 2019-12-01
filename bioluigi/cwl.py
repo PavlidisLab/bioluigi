@@ -1,21 +1,25 @@
 """
-Utilities for dumping a CWL representation of a Luigi workflow.
+This module provide utilities for representing a Luigi workflow with Common
+Workflow Language.
 """
 
+import argparse
 import inspect
+import sys
 from os.path import join
 from subprocess import check_output
 from warnings import warn
 
 import bioluigi
 import luigi
-from luigi.task import flatten
+import yaml
+from luigi.cmdline_parser import CmdlineParser
 from luigi.contrib.external_program import ExternalProgramTask
+from luigi.task import flatten
 
-from .config import rnaseq_pipeline
+from .config import bioluigi
 
-bioluigi_cfg = bioluigi.config.bioluigi()
-cfg = rnaseq_pipeline()
+cfg = bioluigi()
 
 def gen_command_line_tool(task):
     return {'class': 'CommandLineTool',
@@ -58,11 +62,11 @@ def gen_workflow_step(task):
 
 def gen_software_packages():
     return [{'package': 'sratoolkit',
-             'version': check_output([bioluigi_cfg.fastqdump_bin, '--version']).split()[-1]},
+             'version': check_output([cfg.fastqdump_bin, '--version']).split()[-1]},
             {'package': 'STAR',
-             'version': check_output([join(cfg.STAR_PATH, 'STAR'), '--version']).rstrip()},
+             'version': check_output([join(cfg.star_bin, 'STAR'), '--version']).rstrip()},
             {'package': 'RSEM',
-             'version': check_output([join(cfg.RSEM_DIR, 'rsem-calculate-expression'), '--version']).split()[-1]}]
+             'version': check_output([join(cfg.rsem_path, 'rsem-calculate-expression'), '--version']).split()[-1]}]
 
 def gen_workflow_requirements():
     return [{'class': 'SoftwareRequirement',
@@ -113,3 +117,10 @@ def gen_workflow(goal_task):
                 warn('Not checking {} for dynamic dependencies: it is not satisfied.'.format(repr(t)))
 
     return workflow
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate a CWL representation of a Luigi workflow')
+    parser.add_argument('--output', default=sys.stdout)
+    args, remaining_args = parser.parse_known_args(sys.argv[1:])
+    root_task = CmdlineParser(remaining_args).get_task_obj()
+    yaml.dump(gen_workflow(root_task), args.output)
