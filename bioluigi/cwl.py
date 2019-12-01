@@ -17,10 +17,6 @@ from luigi.cmdline_parser import CmdlineParser
 from luigi.contrib.external_program import ExternalProgramTask
 from luigi.task import flatten
 
-from .config import bioluigi
-
-cfg = bioluigi()
-
 def gen_command_line_tool(task):
     return {'class': 'CommandLineTool',
             'baseCommand': task.program_args()[0],
@@ -60,25 +56,12 @@ def gen_workflow_step(task):
         workflow_step['run'] = inspect.getsource(task.run)
     return workflow_step
 
-def gen_software_packages():
-    return [{'package': 'sratoolkit',
-             'version': check_output([cfg.fastqdump_bin, '--version']).split()[-1]},
-            {'package': 'STAR',
-             'version': check_output([join(cfg.star_bin, 'STAR'), '--version']).rstrip()},
-            {'package': 'RSEM',
-             'version': check_output([join(cfg.rsem_path, 'rsem-calculate-expression'), '--version']).split()[-1]}]
-
-def gen_workflow_requirements():
-    return [{'class': 'SoftwareRequirement',
-             'packages': gen_software_packages()}]
-
 def gen_workflow(goal_task):
     """
     Produce a CWL representation of the given task.
     """
     workflow = {'cwlVersion': 'v1.1',
                 'class': 'Workflow',
-                'requirements': gen_workflow_requirements(),
                 'inputs': [],
                 'outputs': gen_workflow_outputs(goal_task),
                 'steps': []}

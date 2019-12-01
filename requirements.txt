@@ -2,3 +2,4 @@ click
 luigi
 nose
 m2r
+PyYAML
