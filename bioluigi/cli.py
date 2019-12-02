@@ -95,15 +95,25 @@ def main(scheduler_url):
 @main.command()
 @click.argument('task_glob', required=False)
 @click.option('--status', multiple=True)
+@click.option('--user', multiple=True)
 @click.option('--detailed', is_flag=True)
-def list(task_glob, status, detailed):
+def list(task_glob, status, user, detailed):
     """
     List all tasks that match the given pattern and filters.
     """
+    filtered_tasks = tasks.values()
+
+    # filter by user
+    if user:
+        filtered_tasks = [task for task in filtered_tasks
+                          if any(u in worker for worker in task['workers'] for u in user)]
+
+    # filter by status
     if status:
-        filtered_tasks = [tasks[t] for t in tasks if tasks[t]['status'] in status and task_matches(tasks[t], task_glob)]
-    else:
-        filtered_tasks = [task for task in tasks.values() if task_matches(task, task_glob)]
+        filtered_tasks = [task for task in filtered_tasks if task['status'] in status]
+
+    filtered_tasks = [task for task in filtered_tasks
+                      if task_matches(task, task_glob)]
 
     if not filtered_tasks:
         click.echo('No task match the provided query.')
