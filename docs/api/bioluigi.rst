@@ -11,6 +11,14 @@ Subpackages
 Submodules
 ----------
 
+bioluigi.cli module
+-------------------
+
+.. automodule:: bioluigi.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 bioluigi.config module
 ----------------------
 
