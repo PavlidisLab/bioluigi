@@ -6,4 +6,4 @@ setup(name='bioluigi',
           'console_scripts': [
               'bioluigi = bioluigi.cli:main',
               'bioluigi-gen-workflow = bioluigi.cwl:main']},
-      install_requires=['click', 'luigi'])
+      install_requires=['click', 'luigi', 'PyYAML'])
