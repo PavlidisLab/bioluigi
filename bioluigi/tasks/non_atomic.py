@@ -1,4 +1,5 @@
 import luigi
+from luigi.task import flatten
 
 class NonAtomicTaskRunContext(object):
     """
@@ -13,6 +14,6 @@ class NonAtomicTaskRunContext(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            for out in luigi.task.flatten_output(self.task):
-                if out.exists():
+            for out in flatten(self.task.output()):
+                if out.exists() and hasattr(out, 'remove'):
                     out.remove()
