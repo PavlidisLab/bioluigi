@@ -11,3 +11,4 @@ class bioluigi(luigi.Config):
     bcftools_bin = luigi.Parameter(default='bcftools')
     vep_bin = luigi.Parameter(default='vep')
     vep_dir = luigi.OptionalParameter(default='', significant=False)
+    multiqc_bin = luigi.Parameter(default='multiqc')
