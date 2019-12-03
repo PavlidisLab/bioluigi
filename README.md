@@ -13,18 +13,28 @@ and extends its feature to make it work on modern scheduler such as [Slurm](http
 
 Provides basic resource management for a local scheduler: all tasks are annotated with reasonable default `cpus` and `memory` parameters that can be tuned and constrained via the `[resources]` configuration. In the case of externally scheduled tasks, the resource management is deferred.
 
+Provides a command-line interface for interacting more conveniently with Luigi scheduler.
+
+```bash
+bioluigi list [--status STATUS] [--user USER] [--detailed] TASK_GLOB
+bioluigi show TASK_ID
+```
+
 ## Tools
 
 Here's a list of supported tools:
 
- - [bcftools](http://www.htslib.org/doc/bcftools.html) (>=1.9)
+ - [sratoolkit](https://ncbi.github.io/sra-tools/) with `prefetch` and `fastq-dump`
+ - [bcftools](http://www.htslib.org/doc/bcftools.html)
+ - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+ - [MultiQC](https://multiqc.info/)
 
 ## Schedulers
 
  - local
  - [Slurm](https://slurm.schedmd.com/)
 
-## Example
+## Examples
 
 The most convenient way of using the pre-defined tasks is to yield them dynamically in the body of the `run` function. It's also possible to require them since they inherit from `luigi.Task`.
 
