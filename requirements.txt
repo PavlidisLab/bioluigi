@@ -1,4 +1,4 @@
 click
 luigi
-nose
+pytest
 m2r
