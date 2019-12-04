@@ -8,6 +8,7 @@
    :caption: Table of contents
 
    api/bioluigi
+   api/bioluigi.tasks
 
 .. mdinclude:: ../README.md
 
