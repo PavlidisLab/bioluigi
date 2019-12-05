@@ -3,7 +3,10 @@ from os.path import join
 
 import luigi
 
+from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
+
+cfg = bioluigi()
 
 class GenerateReport(ScheduledExternalProgramTask):
     task_namespace = 'multiqc'
@@ -11,19 +14,19 @@ class GenerateReport(ScheduledExternalProgramTask):
     input_dirs = luigi.ListParameter()
     output_dir = luigi.Parameter()
 
-    title = luigi.OptionalParameter(default='', positional=False)
-    comment = luigi.OptionalParameter(default='', positional=False)
+    title = luigi.OptionalParameter(default=None, positional=False)
+    comment = luigi.OptionalParameter(default=None, positional=False)
 
     walltime = datetime.timedelta(days=1)
     cpus = 1
 
     def program_args(self):
         args = [cfg.multiqc_bin, '--outdir', self.output_dir]
-        if self.title:
+        if self.title is not None:
             args.extend(['--title', self.title])
-        if self.comment:
+        if self.comment is not None:
             args.extend(['--comment', self.comment])
-        args.extend(input_dirs)
+        args.extend(self.input_dirs)
         return args
 
     def output(self):
