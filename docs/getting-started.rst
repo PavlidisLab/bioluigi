@@ -29,10 +29,8 @@ genome.
    import os
 
    import luigi
-   from luigi.util import requires
    from import bioluigi.tasks import cutadapt, rsem
 
-   @requires(ProduceSample)
    def QuantifySample(luigi.Task):
        sample_id = luigi.Parameter()
 
