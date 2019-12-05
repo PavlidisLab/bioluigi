@@ -9,6 +9,9 @@
    :maxdepth: 2
    :caption: Table of contents
 
+   getting-started
+   cli
+   schedulers
    api/bioluigi
    api/bioluigi.tasks
 

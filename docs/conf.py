@@ -48,9 +48,12 @@ author = 'Guillaume Poirier-Morency'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx_rtd_theme',
     'm2r'
 ]
+
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 master_doc = 'index'
 
