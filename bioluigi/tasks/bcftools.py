@@ -11,31 +11,50 @@ class BcftoolsTask(ScheduledExternalProgramTask):
 
     input_file = luigi.Parameter()
 
-    include = luigi.OptionalParameter(positional=False, default='')
-    exclude = luigi.OptionalParameter(positional=False, default='')
-    regions_file = luigi.OptionalParameter(positional=False, default='')
-    apply_filters = luigi.OptionalParameter(positional=False, default='')
+    include = luigi.OptionalParameter(positional=False, default=None)
+    exclude = luigi.OptionalParameter(positional=False, default=None)
+    regions = luigi.ListParameter(default=[], positional=False)
+    regions_file = luigi.OptionalParameter(positional=False, default=None)
+    samples = luigi.ListParameter(default=[], positional=False)
+    samples_file = luigi.OptionalParameter(default=None, positional=False)
+    apply_filters = luigi.OptionalParameter(positional=False, default=None)
 
     # FIXME: the '--threads' flag does not seem to work
     cpus = 1
 
     def subcommand_args(self):
+        """Returns specific sub-command arguments."""
         raise NotImplementedError
 
     def subcommand_post_input_args(self):
+        """
+        Returns arguments to be appended after the input file.
+
+        This is meant to be to to deal with commands that accept multiple input
+        files.
+        """
         return []
 
     def program_args(self):
         args = [cfg.bcftools_bin]
 
-        if self.include:
+        if self.include is not None:
             args.extend(['-i', self.include])
 
-        if self.exclude:
+        if self.exclude is not None:
             args.extend(['-e', self.exclude])
 
-        if self.regions_file:
+        if self.regions:
+            args.extend(['-r', ','.join(self.regions)])
+
+        if self.regions_file is not None:
             args.extend(['-R', self.regions_file])
+
+        if self.samples:
+            args.extend(['-s', ','.join(self.samples)])
+
+        if self.samples_file:
+            args.extend(['-S', self.samples_file])
 
         if self.apply_filters is not None:
             args.extend(['-f', self.apply_filters])
@@ -71,11 +90,11 @@ class Annotate(BcftoolsTask):
     output_format = luigi.Parameter(positional=False, default='z')
 
     # options given an annotation file
-    annotations_file = luigi.OptionalParameter(positional=False, default='')
+    annotations_file = luigi.OptionalParameter(positional=False, default=None)
 
     columns = luigi.ListParameter(positional=False, default=[])
 
-    rename_chrs = luigi.OptionalParameter(positional=False, default='')
+    rename_chrs = luigi.OptionalParameter(positional=False, default=None)
 
     def subcommand_args(self):
         args = ['annotate']
