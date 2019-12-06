@@ -2,7 +2,7 @@ import os
 import luigi
 from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
 from distutils.spawn import find_executable
-from nose.plugins.skip import SkipTest
+import pytest
 
 class MyTask(ScheduledExternalProgramTask):
     def program_args(self):
@@ -17,5 +17,5 @@ def test_local_scheduler():
 
 def test_slurm_scheduler():
     if find_executable('srun') is None:
-        raise SkipTest('srun is needed to run Slurm tests.')
+        pytest.skip('srun is needed to run Slurm tests.')
     luigi.build([MyTask(scheduler='slurm')], local_scheduler=True)
