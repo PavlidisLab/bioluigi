@@ -73,7 +73,7 @@ class FastqDump(ScheduledExternalProgramTask):
             return super(FastqDump, self).run()
 
     def output(self):
-        sra_accession, _ = os.path.split(os.path.basename(self.input_file))
+        sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
         if self.paired_reads:
             return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
                     luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
