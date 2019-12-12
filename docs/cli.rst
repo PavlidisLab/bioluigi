@@ -31,3 +31,27 @@ Given a task identifier, this subcommand will display the details of a task.
    bioluigi show TASK_ID
 
 - ``TASK_ID`` is a task identifier.
+
+Forgive a failed task
+---------------------
+
+Forgive a failed task which will update its status to ``PENDING``.
+
+.. code-block:: bash
+
+   bioluigi forgive [--recursive] TASK_ID
+   
+- ``TASK_ID`` is a task identifier.
+- ``--recursive`` recursively forgive the task dependencies
+
+Re-enable a disabled task
+-------------------------
+
+Re-enable a disabled task which will update its status to ``FAILED``.
+
+.. code-block:: bash
+
+   bioluigi reenable [--recursive] TASK_ID
+
+- ``TASK_ID`` is a task identifier.
+- ``--recursive`` recursively re-enable the task dependencies
