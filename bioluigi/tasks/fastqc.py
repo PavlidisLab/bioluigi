@@ -28,5 +28,11 @@ class GenerateReport(ScheduledExternalProgramTask):
                 '--outdir', self.output_dir,
                 self.input_file]
 
+    def run(self):
+        super(GenerateReport, self).run()
+        # FastQC does not exit with a proper code on error
+        if not self.output().exists():
+            raise RuntimeError('FastQC did not produce any output: {}'.format(self.output().path))
+
     def output(self):
         return luigi.LocalTarget(join(self.output_dir, self.gen_report_basename(self.input_file)))
