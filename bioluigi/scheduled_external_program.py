@@ -53,7 +53,8 @@ class SlurmScheduler(Scheduler):
             '--job-name', repr(task),
             '--time', '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
-            '--cpus-per-task', str(task.cpus)]
+            '--cpus-per-task', str(task.cpus),
+            '--priority', str(max(0, int(task.priority)))]
         args = list(map(str, task.program_args()))
         env = task.program_environment()
         logger.info('Running Slurm command {}'.format(' '.join(['srun'] + srun_args + list(task.scheduler_extra_args) + args)))
