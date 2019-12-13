@@ -5,4 +5,4 @@ setup(name='bioluigi',
       entry_points={
           'console_scripts': [
               'bioluigi = bioluigi.cli:main']},
-      install_requires=['click', 'luigi'])
+      install_requires=['click', 'luigi', 'requests'])
