@@ -5,7 +5,7 @@ import luigi
 from luigi.task import flatten
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
-from ..tasks.non_atomic import NonAtomicTaskRunContext
+from ..tasks.non_atomic import non_atomic
 
 cfg = bioluigi()
 
@@ -37,6 +37,7 @@ class Prefetch(ScheduledExternalProgramTask):
     def output(self):
         return luigi.LocalTarget(self.output_file)
 
+@non_atomic
 class FastqDump(ScheduledExternalProgramTask):
     """
     Extract one or multiple FASTQs from a SRA archive
@@ -67,10 +68,6 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--split-files',
                 '--outdir', self.output_dir,
                 self.input_file]
-
-    def run(self):
-        with NonAtomicTaskRunContext(self):
-            return super(FastqDump, self).run()
 
     def output(self):
         sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))

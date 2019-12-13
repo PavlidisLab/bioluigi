@@ -17,3 +17,10 @@ class NonAtomicTaskRunContext(object):
             for out in flatten(self.task.output()):
                 if out.exists() and hasattr(out, 'remove'):
                     out.remove()
+
+def non_atomic(cls):
+    class Wrapper(cls):
+        def run(self):
+            with NonAtomicTaskRunContext(self):
+                return super(Wrapper, self).run()
+    return Wrapper
