@@ -1,3 +1,5 @@
+import signal
+
 import luigi
 from luigi.task import flatten
 
@@ -10,13 +12,20 @@ class NonAtomicTaskRunContext(object):
         self.task = task
 
     def __enter__(self):
-        pass
+        self.__old_signal = signal.getsignal(signal.SIGTERM)
+        signal.signal(signal.SIGTERM, self.cleanup_task_outputs)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            for out in flatten(self.task.output()):
-                if out.exists() and hasattr(out, 'remove'):
-                    out.remove()
+        try:
+            if exc_type is not None:
+                self.cleanup_task_outputs()
+        finally:
+            signal.signal(signal.SIGTERM, self.__old_signal)
+
+    def cleanup_task_outputs(self):
+        for out in flatten(self.task.output()):
+            if out.exists() and hasattr(out, 'remove'):
+                out.remove()
 
 def non_atomic(cls):
     class Wrapper(cls):
