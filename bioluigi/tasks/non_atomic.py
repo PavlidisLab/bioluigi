@@ -22,7 +22,7 @@ class NonAtomicTaskRunContext(object):
         finally:
             signal.signal(signal.SIGTERM, self.__old_signal)
 
-    def cleanup_task_outputs(self):
+    def cleanup_task_outputs(self, signal_number=None, stackframe=None):
         for out in flatten(self.task.output()):
             if out.exists() and hasattr(out, 'remove'):
                 out.remove()
