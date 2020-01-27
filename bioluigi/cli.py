@@ -10,12 +10,13 @@ from fnmatch import fnmatch
 import sys
 from os.path import join
 from collections import Counter
+from babel.numbers import format_number
 
 class TooManyTasksError(Exception):
     def __init__(self, num_tasks):
         self.num_tasks = num_tasks
     def __str__(self):
-        return 'That request would return too many tasks; try filtering by status or use a glob query.'.format(self.num_tasks)
+        return 'That request would return {} tasks; try filtering by status or use a glob query.'.format(format_number(self.num_tasks))
 
 def rpc(scheduler_url, method, **kwargs):
     url = join(scheduler_url, 'api', method)
@@ -137,9 +138,17 @@ def list(ctx, task_glob, status, user, summary, detailed):
     tasks = {}
     if status:
         for s in status:
-            tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s))
+            try:
+                tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s))
+            except TooManyTasksError as e:
+                click.echo(e)
+                return
     else:
-        tasks.update(rpc(scheduler_url, 'task_list', search=search))
+        try:
+            tasks.update(rpc(scheduler_url, 'task_list', search=search))
+        except TooManyTasksError as e:
+            click.echo(e)
+            return
 
     fix_tasks_dict(tasks)
 
