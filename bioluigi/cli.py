@@ -11,12 +11,21 @@ import sys
 from os.path import join
 from collections import Counter
 
+class TooManyTasksError(Exception):
+    def __init__(self, num_tasks):
+        self.num_tasks = num_tasks
+    def __str__(self):
+        return 'That request would return too many tasks; try filtering by status or use a glob query.'.format(self.num_tasks)
+
 def rpc(scheduler_url, method, **kwargs):
     url = join(scheduler_url, 'api', method)
     payload = {'data': json.dumps(kwargs)}
     res = requests.get(url, params=payload if kwargs else None)
     res.raise_for_status()
-    return res.json()['response']
+    response_data = res.json()['response']
+    if 'num_tasks' in response_data:
+        raise TooManyTasksError(response_data['num_tasks'])
+    return response_data
 
 def task_sort_key(task):
     """Produce a key to sort tasks by relevance."""
@@ -108,12 +117,7 @@ def fix_tasks_dict(tasks):
 @click.option('--scheduler-url', default='http://localhost:8082/')
 @click.pass_context
 def main(ctx, scheduler_url):
-    ctx.obj = {}
-    ctx.obj['SCHEDULER_URL'] = scheduler_url
-    # TODO: defer this, not all commands need the full task list
-    tasks = rpc(scheduler_url, 'task_list')
-    fix_tasks_dict(tasks)
-    ctx.obj['TASKS'] = tasks
+    ctx.obj = {'SCHEDULER_URL': scheduler_url}
 
 @main.command()
 @click.argument('task_glob', required=False)
@@ -126,7 +130,18 @@ def list(ctx, task_glob, status, user, summary, detailed):
     """
     List all tasks that match the given pattern and filters.
     """
-    tasks = ctx.obj['TASKS']
+    scheduler_url = ctx.obj['SCHEDULER_URL']
+
+    search = task_glob.replace('*', '') if task_glob else None
+
+    tasks = {}
+    if status:
+        for s in status:
+            tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s))
+    else:
+        tasks.update(rpc(scheduler_url, 'task_list', search=search))
+
+    fix_tasks_dict(tasks)
 
     filtered_tasks = tasks.values()
 
@@ -134,10 +149,6 @@ def list(ctx, task_glob, status, user, summary, detailed):
     if user:
         filtered_tasks = [task for task in filtered_tasks
                           if any(u in worker for worker in task['workers'] for u in user)]
-
-    # filter by status
-    if status:
-        filtered_tasks = [task for task in filtered_tasks if task['status'] in status]
 
     filtered_tasks = [task for task in filtered_tasks
                       if task_matches(task, task_glob)]
@@ -175,7 +186,11 @@ def show(ctx, task_id):
     TASK_ID Task identifier
     """
     scheduler_url = ctx.obj['SCHEDULER_URL']
-    tasks = ctx.obj['TASKS']
+
+    tasks = {}
+    for status, t in rpc(scheduler_url, 'task_search', task_str=task_id).items():
+        tasks.update(t)
+    fix_tasks_dict(tasks)
 
     formatter = DetailedTaskFormatter()
 
