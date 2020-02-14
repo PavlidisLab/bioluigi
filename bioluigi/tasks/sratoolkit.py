@@ -1,8 +1,10 @@
 import datetime
 import os
 from os.path import join
+
 import luigi
 from luigi.task import flatten
+
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
 from ..tasks.non_atomic import non_atomic
@@ -52,6 +54,8 @@ class FastqDump(ScheduledExternalProgramTask):
     input_file = luigi.Parameter()
     output_dir = luigi.Parameter()
 
+    minimum_read_length = luigi.IntParameter(default=0, positional=False)
+
     paired_reads = luigi.BoolParameter(default=False, positional=False)
 
     walltime = datetime.timedelta(hours=6)
@@ -59,15 +63,22 @@ class FastqDump(ScheduledExternalProgramTask):
     memory = 1
 
     def program_args(self):
-        return [cfg.fastqdump_bin,
+        args = [cfg.fastqdump_bin,
                 '--gzip',
                 '--clip',
                 '--skip-technical',
                 '--readids',
                 '--dumpbase',
-                '--split-files',
-                '--outdir', self.output_dir,
-                self.input_file]
+                '--split-files']
+
+        if self.minimum_read_length > 0:
+            args.extend(['-M', self.minimum_read_length])
+
+        args.extend(['--outdir', self.output_dir])
+
+        args.append(self.input_file)
+
+        return args
 
     def output(self):
         sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
