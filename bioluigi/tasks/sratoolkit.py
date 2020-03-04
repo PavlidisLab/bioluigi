@@ -63,7 +63,7 @@ class FastqDump(ScheduledExternalProgramTask):
     memory = 1
 
     def __init__(self, *kwargs, **kwds):
-        super().__init__(*kwargs, **kwds)
+        super(FastqDump, self).__init__(*kwargs, **kwds)
         base, tail = split(self.output_dir)
         self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
 
