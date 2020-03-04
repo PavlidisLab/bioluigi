@@ -6,5 +6,5 @@ def test_fastq_dump():
     assert '-M' in args
     assert 18 in args
     assert args[-3] == '--outdir'
-    assert args[-2] == 'outdir'
+    assert args[-2].startswith('outdir-tmp')
     assert args[-1] == 'srr_accession'

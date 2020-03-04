@@ -1,13 +1,14 @@
 import datetime
 import os
-from os.path import join
+from os.path import join, split, basename
+from tempfile import mkdtemp
+import shutil
 
 import luigi
 from luigi.task import flatten
 
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
-from ..tasks.non_atomic import non_atomic
 
 cfg = bioluigi()
 
@@ -39,7 +40,6 @@ class Prefetch(ScheduledExternalProgramTask):
     def output(self):
         return luigi.LocalTarget(self.output_file)
 
-@non_atomic
 class FastqDump(ScheduledExternalProgramTask):
     """
     Extract one or multiple FASTQs from a SRA archive
@@ -62,6 +62,11 @@ class FastqDump(ScheduledExternalProgramTask):
     cpus = 1
     memory = 1
 
+    def __init__(self, *kwargs, **kwds):
+        super().__init__(*kwargs, **kwds)
+        base, tail = split(self.output_dir)
+        self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
+
     def program_args(self):
         args = [cfg.fastqdump_bin,
                 '--gzip',
@@ -69,16 +74,27 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--skip-technical',
                 '--readids',
                 '--dumpbase',
-                '--split-files']
+                '--split-files',
+                '--keep-empty-files']
 
         if self.minimum_read_length > 0:
             args.extend(['-M', self.minimum_read_length])
 
-        args.extend(['--outdir', self.output_dir])
+        args.extend(['--outdir', self.temp_output_dir])
 
         args.append(self.input_file)
 
         return args
+
+    def run(self):
+        try:
+            super(FastqDump, self).run()
+            # move every output to the final directory
+            for out in self.output():
+                out.makedirs()
+                os.replace(join(self.temp_output_dir, basename(out.path)), out.path)
+        finally:
+            shutil.rmtree(self.temp_output_dir)
 
     def output(self):
         sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
