@@ -27,6 +27,12 @@ class Prefetch(ScheduledExternalProgramTask):
     max_size = luigi.IntParameter(default=20, positional=False, significant=False)
     extra_args = luigi.ListParameter(default=[], positional=False)
 
+    @property
+    def resources(self):
+        r = super(FastqDump, self).resources
+        r.update({'sra_http_connections': 1})
+        return r
+
     def program_args(self):
         args = [cfg.prefetch_bin,
                 '--max-size',    '{}G'.format(self.max_size),
