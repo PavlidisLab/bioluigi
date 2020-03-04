@@ -58,7 +58,7 @@ class FastqDump(ScheduledExternalProgramTask):
 
     paired_reads = luigi.BoolParameter(default=False, positional=False)
 
-    walltime = datetime.timedelta(hours=6)
+    walltime = datetime.timedelta(days=1)
     cpus = 1
     memory = 1
 

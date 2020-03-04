@@ -12,7 +12,7 @@ class GenerateReport(ScheduledExternalProgramTask):
     input_file = luigi.Parameter()
     output_dir = luigi.Parameter()
 
-    walltime = datetime.timedelta(hours=1)
+    walltime = datetime.timedelta(hours=8)
     cpus = 1
     memory = 2
 
