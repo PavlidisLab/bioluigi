@@ -29,7 +29,7 @@ class Prefetch(ScheduledExternalProgramTask):
 
     @property
     def resources(self):
-        r = super(FastqDump, self).resources
+        r = super(Prefetch, self).resources
         r.update({'sra_http_connections': 1})
         return r
 
