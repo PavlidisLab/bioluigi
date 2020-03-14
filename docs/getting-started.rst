@@ -23,6 +23,10 @@ Now, let's setup a simple single read RNA-Seq pipeline. For this use case, we
 will first trim our single-end reads and then align them on a human reference
 genome.
 
+Note that ``rsem.CalculateExpression`` depends on ``rsem.PrepareReference`` so
+we'll also need to pass the arguments necessary to generate the reference
+genome index. The index will be generated once and reused for subsequent tasks.
+
 ::
 
    import datetime
@@ -32,26 +36,26 @@ genome.
    from import bioluigi.tasks import cutadapt, rsem
 
    def QuantifySample(luigi.Task):
-       sample_id = luigi.Parameter()
+       sample_id = luigi.Parameter(description='Sample identifier')
 
        def input(self):
            return luigi.LocalTarget('{}.fastq.gz'.format(self.sample_id))
 
        def run(self):
-           sample = self.input(description='Sample identifier')
+           sample = self.input()
 
            trimmed_reads = yield cutadapt.TrimReads(sample.path,
-                                                    adapter_3prime='ACGTAGCGAGA...')
+               adapter_3prime='ACGTAGCGAGA...')
 
-           yield rsem.CalculateExpression('genomes/hg38_ensembl98/annotation.gtf',
-                                          ['genomes/hg38_ensembl98/primary_assembly.fa'],
-                                          [trimmed_reads.path],
-                                          'references/hg38_ensembl98',
-                                          self.sample_id,
-                                          aligner='star',
-                                          walltime=datetime.timedelta(hours=4),
-                                          cpus=8,
-                                          memory=32)
+           isoform_expr, genes_expr = yield rsem.CalculateExpression('genomes/hg38_ensembl98/annotation.gtf',
+               ['genomes/hg38_ensembl98/primary_assembly.fa'],
+               [trimmed_reads.path],
+               'references/hg38_ensembl98',
+               self.sample_id,
+               aligner='star',
+               walltime=datetime.timedelta(hours=4),
+               cpus=8,
+               memory=32)
 
        def output(self):
            return luigi.LocalTarget('{}.genes.results'.format(self.sample_id))
@@ -62,6 +66,8 @@ tasks will be dispatched on the cluster with allocated resources.
 
 To run our task on a given sample:
 
-.. code-block::
+.. code-block:: bash
 
    luigi --module tasks QuantifySample --sample-id SRR...
+
+To see more advanced usage of Bioluigi, take a look at our `RNA-Seq pipeline <https://github.com/pavlidisLab/rnaseq-pipeline>`_.

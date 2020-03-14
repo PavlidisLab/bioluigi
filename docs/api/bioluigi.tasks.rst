@@ -44,14 +44,6 @@ bioluigi.tasks.multiqc module
    :undoc-members:
    :show-inheritance:
 
-bioluigi.tasks.non\_atomic module
----------------------------------
-
-.. automodule:: bioluigi.tasks.non_atomic
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 bioluigi.tasks.rsem module
 --------------------------
 
