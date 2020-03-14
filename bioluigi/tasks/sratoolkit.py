@@ -30,7 +30,7 @@ class Prefetch(ScheduledExternalProgramTask):
     @property
     def resources(self):
         r = super(Prefetch, self).resources
-        r.update({'sra_http_connections': 1})
+        r.update({'prefetch_jobs': 1})
         return r
 
     def program_args(self):
@@ -67,6 +67,12 @@ class FastqDump(ScheduledExternalProgramTask):
     walltime = datetime.timedelta(days=1)
     cpus = 1
     memory = 1
+
+    @property
+    def resources(self):
+        r = super(FastqDump, self).resources
+        r.update({'fastq_dump_jobs': 1})
+        return r
 
     def __init__(self, *kwargs, **kwds):
         super(FastqDump, self).__init__(*kwargs, **kwds)
