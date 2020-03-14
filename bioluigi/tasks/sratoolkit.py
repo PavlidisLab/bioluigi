@@ -16,16 +16,15 @@ class Prefetch(ScheduledExternalProgramTask):
     """
     Prefetch a SRA run archive.
 
-    :attr max_size: Maximum download size in gigabytes
-    :attr extra_args: Extra argumets to pass to prefetch which can be used to setup
-    Aspera.
+    The number of concurrent prefetch jobs can be adjusted by setting the
+    'prefetch_jobs' resource.
     """
     task_namespace = 'sratoolkit'
 
     srr_accession = luigi.Parameter()
     output_file = luigi.Parameter()
-    max_size = luigi.IntParameter(default=20, positional=False, significant=False)
-    extra_args = luigi.ListParameter(default=[], positional=False)
+    max_size = luigi.IntParameter(default=20, positional=False, significant=False, description='Maximum download size in gigabytes')
+    extra_args = luigi.ListParameter(default=[], positional=False, description='Extra arguments to pass to prefetch which can be used to setup Aspera')
 
     @property
     def resources(self):
@@ -50,19 +49,17 @@ class FastqDump(ScheduledExternalProgramTask):
     """
     Extract one or multiple FASTQs from a SRA archive
 
-    :attr input_file: A file path or a SRA archive, or a SRA run accession
-    :attr output_dir: Destination directory for the extracted FASTQs
-    :attr paired_reads: Indicate if the original data has paired mates, in
-    which case the output will consist of two files instead of one
+    The number of concurrent fastq-dump jobs can be adjusted by setting the
+    'fastq_dump_jobs' resource.
     """
     task_namespace = 'sratoolkit'
 
-    input_file = luigi.Parameter()
-    output_dir = luigi.Parameter()
+    input_file = luigi.Parameter(description='A file path or a SRA archive, or a SRA run accession')
+    output_dir = luigi.Parameter(description='Destination directory for the extracted FASTQs')
 
-    minimum_read_length = luigi.IntParameter(default=0, positional=False)
+    minimum_read_length = luigi.IntParameter(default=0, positional=False, description='Minimum read length to be extracted from the archive')
 
-    paired_reads = luigi.BoolParameter(default=False, positional=False)
+    paired_reads = luigi.BoolParameter(default=False, positional=False, description='Indicate if the original data has paired mates, in which case the output will consist of two files instead of one')
 
     walltime = datetime.timedelta(days=1)
     cpus = 1
