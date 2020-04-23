@@ -38,6 +38,8 @@ class BcftoolsTask(ScheduledExternalProgramTask):
     def program_args(self):
         args = [cfg.bcftools_bin]
 
+        args.extend(self.subcommand_args())
+
         if self.include is not None:
             args.extend(['-i', self.include])
 
@@ -59,8 +61,6 @@ class BcftoolsTask(ScheduledExternalProgramTask):
         if self.apply_filters is not None:
             args.extend(['-f', self.apply_filters])
 
-        args.extend(self.subcommand_args())
-
         args.append(self.input_file)
 
         args.extend(self.subcommand_post_input_args())
@@ -77,7 +77,7 @@ class View(BcftoolsTask):
     def subcommand_args(self):
         return ['view',
             '--output-type', self.output_format,
-            '--output', self.output_file]
+            '--output-file', self.output_file]
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
