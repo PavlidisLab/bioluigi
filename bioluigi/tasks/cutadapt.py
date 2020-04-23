@@ -26,10 +26,10 @@ class CutadaptTask(ScheduledExternalProgramTask):
         args.extend(['-j', self.cpus])
 
         if self.adapter_3prime:
-            args.extend(['-a', self.adapter_3primer])
+            args.extend(['-a', self.adapter_3prime])
 
         if self.adapter_5prime:
-            args.extend(['-g', self.adapter_5primer])
+            args.extend(['-g', self.adapter_5prime])
 
         if self.trim_n:
             args.append('--trim-n')
@@ -58,7 +58,11 @@ class TrimPairedReads(CutadaptTask):
     output2_file = luigi.Parameter()
 
     def program_args(self):
-        args = super(TrimReads, self).program_args()
+        args = super(TrimPairedReads, self).program_args()
+        if self.adapter_3prime:
+            args.extend(['-A', self.adapter_3prime])
+        if self.adapter_5prime:
+            args.extend(['-G', self.adapter_3prime])
         args.extend([
             '-o', self.output_file,
             '-p', self.output2_file,
