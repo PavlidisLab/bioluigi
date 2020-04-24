@@ -1,8 +1,13 @@
 import datetime
+import logging
 
 import luigi
+from luigi.task import flatten_output
+
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
+
+logger = logging.getLogger('luigi-interface')
 
 cfg = bioluigi()
 
@@ -19,6 +24,13 @@ class CutadaptTask(ScheduledExternalProgramTask):
     minimum_length = luigi.IntParameter(default=0, positional=False)
 
     walltime = datetime.timedelta(hours=2)
+
+    def on_failure(self):
+        logger.warning('Cleaning up outputs of %s due to failure.', repr(self))
+        for out in flatten_output(self):
+            if out.exists():
+                out.remove()
+        return super(CutadaptTask, self).on_failure()
 
     def program_args(self):
         args = [cfg.cutadapt_bin]
@@ -40,6 +52,10 @@ class CutadaptTask(ScheduledExternalProgramTask):
         return args
 
 class TrimReads(CutadaptTask):
+    """
+    For consistency with TrimPairedReads, this task output a list with a single
+    target corresponding to trimmed FASTQ.
+    """
     input_file =  luigi.Parameter()
     output_file = luigi.Parameter()
 
@@ -49,7 +65,7 @@ class TrimReads(CutadaptTask):
         return args
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return [luigi.LocalTarget(self.output_file)]
 
 class TrimPairedReads(CutadaptTask):
     input_file = luigi.Parameter()
