@@ -49,16 +49,22 @@ class SlurmScheduler(Scheduler):
     @classmethod
     def run_task(self, task):
         secs = int(task.walltime.total_seconds())
-        srun_args = [
+        srun_args = ['srun']
+        srun_args.extend([
             '--job-name', repr(task),
             '--time', '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
-            '--cpus-per-task', str(task.cpus),
-            '--priority', str(max(0, int(task.priority)))]
+            '--cpus-per-task', str(task.cpus)])
+        if cfg.scheduler_partition:
+            srun_args.extend(['--partition', cfg.scheduler_partition])
+        # FIXME: task.priority is not reliable and does not reflect what the
+        # scheduler
+        # TODO: srun_args.extend([--priority', str(max(0, cfg.scheduler_priority))])
+        srun_args.extend(map(str, task.scheduler_extra_args))
         args = list(map(str, task.program_args()))
         env = task.program_environment()
-        logger.info('Running Slurm command {}'.format(' '.join(['srun'] + srun_args + list(task.scheduler_extra_args) + args)))
-        proc = Popen(['srun'] + srun_args + list(task.scheduler_extra_args) + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        logger.info('Running Slurm command {}'.format(' '.join(srun_args + args)))
+        proc = Popen(srun_args + args, env=env, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         with ExternalProgramRunContext(proc):
             stdout, stderr = proc.communicate()
         if proc.returncode != 0:
@@ -73,6 +79,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     executes the task with a :class:`Scheduler`.
     """
     scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
+    scheduler_partition = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False, significant=False, description='Scheduler partition (or queue) to use if supported')
     scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(days=1), positional=False, significant=False, description='Amout of time to allocate for the task')

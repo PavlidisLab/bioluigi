@@ -10,6 +10,7 @@ class MyTask(ScheduledExternalProgramTask):
 
 def test_default_scheduler():
     assert MyTask().scheduler == 'local'
+    assert MyTask().scheduler_partition == ''
     luigi.build([MyTask()], local_scheduler=True)
 
 def test_local_scheduler():
