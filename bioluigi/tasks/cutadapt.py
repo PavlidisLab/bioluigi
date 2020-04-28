@@ -25,12 +25,12 @@ class CutadaptTask(ScheduledExternalProgramTask):
 
     walltime = datetime.timedelta(hours=2)
 
-    def on_failure(self):
+    def on_failure(self, ex):
         logger.warning('Cleaning up outputs of %s due to failure.', repr(self))
         for out in flatten_output(self):
             if out.exists():
                 out.remove()
-        return super(CutadaptTask, self).on_failure()
+        return super(CutadaptTask, self).on_failure(ex)
 
     def program_args(self):
         args = [cfg.cutadapt_bin]
