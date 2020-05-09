@@ -47,7 +47,10 @@ class Prefetch(ScheduledExternalProgramTask):
 
 class FastqDump(ScheduledExternalProgramTask):
     """
-    Extract one or multiple FASTQs from a SRA archive
+    Extract FASTQs from a SRA archive
+
+    The task output three targets: single-end reads (1 file) and paired-end
+    reads (2 files).
 
     The number of concurrent fastq-dump jobs can be adjusted by setting the
     'fastq_dump_jobs' resource.
@@ -58,8 +61,6 @@ class FastqDump(ScheduledExternalProgramTask):
     output_dir = luigi.Parameter(description='Destination directory for the extracted FASTQs')
 
     minimum_read_length = luigi.IntParameter(default=0, positional=False, description='Minimum read length to be extracted from the archive')
-
-    paired_reads = luigi.BoolParameter(default=False, positional=False, description='Indicate if the original data has paired mates, in which case the output will consist of two files instead of one')
 
     walltime = datetime.timedelta(days=1)
     cpus = 1
@@ -83,7 +84,7 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--skip-technical',
                 '--readids',
                 '--dumpbase',
-                '--split-files',
+                '--split-3',
                 '--keep-empty-files']
 
         if self.minimum_read_length > 0:
@@ -107,8 +108,6 @@ class FastqDump(ScheduledExternalProgramTask):
 
     def output(self):
         sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
-        if self.paired_reads:
-            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
-                    luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
-        else:
-            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz'))]
+        return [luigi.LocalTarget(join(self.output_dir, sra_accession + '.fastq.gz')),
+                luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
+                luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
