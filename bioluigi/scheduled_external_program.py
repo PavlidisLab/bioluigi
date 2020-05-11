@@ -20,32 +20,30 @@ cfg = bioluigi()
 
 logger = logging.getLogger('luigi-interface')
 
+_schedulers = {}
+
+def register_scheduler(blurb):
+    global _schedulers
+    def wrapper(cls):
+        _schedulers[blurb] = cls
+        return cls
+    return wrapper
+
 class Scheduler(object):
     """
     :param blurb: Short name by with the scheduler is referred to
     or if it should be done through Luigi's resource management system.
     """
 
-    blurb = None
-
-    @classmethod
-    def fromblurb(cls, blurb):
-        for subcls in cls.__subclasses__():
-            if subcls.blurb == blurb:
-                return subcls()
-        else:
-            raise ValueError('{} is not a recognized scheduler.'.format(blurb))
-
     @classmethod
     def run_task(self, task):
         raise NotImplementedError
 
+@register_scheduler('slurm')
 class SlurmScheduler(Scheduler):
     """
     Scheduler based on Slurm https://slurm.schedmd.com/
     """
-    blurb = 'slurm'
-
     @classmethod
     def run_task(self, task):
         secs = int(task.walltime.total_seconds())
@@ -78,13 +76,21 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.
     """
-    scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [cls.blurb for cls in Scheduler.__subclasses__()], positional=False, significant=False, description='Scheduler to use for running the task')
+    scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [blurb for blurb in _schedulers], positional=False, significant=False, description='Scheduler to use for running the task')
     scheduler_partition = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False, significant=False, description='Scheduler partition (or queue) to use if supported')
     scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(days=1), positional=False, significant=False, description='Amout of time to allocate for the task')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
+
+    def __init__(self, *kwargs, **kwds):
+        super(ScheduledExternalProgramTask, self).__init__(*kwargs, **kwds)
+        try:
+            if self.scheduler != 'local':
+                self._scheduler = _schedulers[self.scheduler]
+        except KeyError:
+            raise ValueError('Unsupported scheduler {}'.format(self.scheduler))
 
     @property
     def resources(self):
@@ -98,4 +104,4 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
         if self.scheduler == 'local':
             return super(ScheduledExternalProgramTask, self).run()
         else:
-            return Scheduler.fromblurb(self.scheduler).run_task(self)
+            return self._scheduler.run_task(self)
