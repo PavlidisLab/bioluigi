@@ -7,6 +7,12 @@ from ..scheduled_external_program import ScheduledExternalProgramTask
 cfg = bioluigi()
 
 class Annotate(ScheduledExternalProgramTask):
+    """
+    Annotate a VCF file with Ensembl VEP.
+
+    Setting :cpus: parameter will adjust the number of forks (via --fork) VEP
+    uses to annotate its input.
+    """
     task_namespace = 'vep'
 
     vcf_file = luigi.Parameter()
@@ -27,6 +33,8 @@ class Annotate(ScheduledExternalProgramTask):
     def program_args(self):
         args = [cfg.vep_bin,
                 '-i', self.vcf_file,
+                '--fork', self.cpus,
+                '--buffer_size', self.buffer_size,
                 '--format', 'vcf',
                 '--species', self.species,
                 '--assembly', self.assembly,
