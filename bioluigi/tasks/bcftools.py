@@ -152,3 +152,36 @@ class Intersect(BcftoolsTask):
 
     def output(self):
         return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
+
+class Merge(BcftoolsTask):
+    """
+    Merge the samples of two or more VCF files
+    TODO: support merging against an arbitrary number of files
+    """
+    input_file2 = luigi.Parameter()
+
+    filter_logic = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
+    info_rules = luigi.ListParameter(default=[], positional=False)
+
+    output_file = luigi.Parameter()
+    output_format = luigi.Parameter(positional=False, default='z')
+
+    def subcommand_args(self):
+        args = ['merge']
+
+        args.extend(['--filter-logic', self.filter_logic])
+
+        if self.info_rules:
+            args.extend(['--info-rules', ','.join(self.info_rules)])
+
+        args.extend([
+            '--output-type', self.output_format,
+            '--output', self.output_file])
+
+        return args
+
+    def subcommand_post_input_args(self):
+        return [self.input_file2]
+
+    def output(self):
+        return luigi.LocalTarget(self.output_file)
