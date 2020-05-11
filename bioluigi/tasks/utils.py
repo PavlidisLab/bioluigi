@@ -5,7 +5,7 @@ Collection of utilities and mixins for tasks
 import logging
 
 import luigi
-from luigi.task import getpaths, flatten
+from luigi.task import getpaths, flatten, flatten_output
 
 logger = logging.getLogger('luigi-interface')
 
@@ -49,3 +49,14 @@ class DynamicTaskWithOutputMixin(object):
             tasks = tasks[0]
 
         return getpaths(tasks)
+
+class RemoveTaskOutputOnFailureMixin(object):
+    """
+    Extends a task to remove its outputs on failure.
+    """
+    def on_failure(self, err):
+        logger.info('Removing task output of {} due to failure...', repr(self))
+        for out in flatten_output(self):
+            if out.exists() and hasattr(out, 'remove'):
+                out.remove()
+        return super(RemoveTaskOutputOnFailureMixin, self).on_failure(err)
