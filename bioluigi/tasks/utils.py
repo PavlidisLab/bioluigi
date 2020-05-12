@@ -16,7 +16,7 @@ class DynamicWrapperTask(luigi.Task):
     """
     def complete(self):
         # ensure that static dependencies are met
-        if not all(tasks.complete() for task in self.requires()):
+        if not all(req.complete() for req in flatten(self.requires())):
             return False
 
         # ensure that all dynamic dependencies are met
