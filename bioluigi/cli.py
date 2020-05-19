@@ -223,7 +223,7 @@ def reenable(ctx, task_id, recursive):
 
     if recursive:
         deps = rpc(scheduler_url, 'dep_graph', task_id=task_id)
-        toreenable.extend(deps.keys())
+        toreenable.extend(k for k in deps if deps[k]['status'] == 'DISABLED')
 
     for task_id in toreenable:
         try:
@@ -247,7 +247,7 @@ def forgive(ctx, task_id, recursive):
 
     if recursive:
         deps = rpc(scheduler_url, 'dep_graph', task_id=task_id)
-        toforgive.extend(deps.keys())
+        toforgive.extend(k for k in deps if deps[k]['status'] == 'FAILED')
 
     for task_id in toforgive:
         try:
