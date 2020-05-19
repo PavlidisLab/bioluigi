@@ -16,7 +16,7 @@ class TooManyTasksError(Exception):
     def __init__(self, num_tasks):
         self.num_tasks = num_tasks
     def __str__(self):
-        return 'That request would return {} tasks; try filtering by status or use a glob query.'.format(format_number(self.num_tasks))
+        return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(format_number(self.num_tasks))
 
 def rpc(scheduler_url, method, **kwargs):
     url = join(scheduler_url, 'api', method)
@@ -126,8 +126,9 @@ def main(ctx, scheduler_url):
 @click.option('--user', multiple=True)
 @click.option('--summary', is_flag=True)
 @click.option('--detailed', is_flag=True)
+@click.option('--no-limit', is_flag=True)
 @click.pass_context
-def list(ctx, task_glob, status, user, summary, detailed):
+def list(ctx, task_glob, status, user, summary, detailed, no_limit):
     """
     List all tasks that match the given pattern and filters.
     """
@@ -135,17 +136,19 @@ def list(ctx, task_glob, status, user, summary, detailed):
 
     search = task_glob.replace('*', '') if task_glob else None
 
+    limit = None if no_limit else 100000
+
     tasks = {}
     if status:
         for s in status:
             try:
-                tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s))
+                tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s, limit=limit))
             except TooManyTasksError as e:
                 click.echo(e)
                 return
     else:
         try:
-            tasks.update(rpc(scheduler_url, 'task_list', search=search))
+            tasks.update(rpc(scheduler_url, 'task_list', search=search, limit=limit))
         except TooManyTasksError as e:
             click.echo(e)
             return
