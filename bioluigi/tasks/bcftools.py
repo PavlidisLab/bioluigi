@@ -26,14 +26,14 @@ class BcftoolsTask(ScheduledExternalProgramTask):
         """Returns specific sub-command arguments."""
         raise NotImplementedError
 
-    def subcommand_post_input_args(self):
+    def subcommand_input_args(self):
         """
-        Returns arguments to be appended after the input file.
+        Returns arguments to be appended at the input file location.
 
         This is meant to be to to deal with commands that accept multiple input
         files.
         """
-        return []
+        return [self.input_file]
 
     def program_args(self):
         args = [cfg.bcftools_bin]
@@ -61,9 +61,7 @@ class BcftoolsTask(ScheduledExternalProgramTask):
         if self.apply_filters is not None:
             args.extend(['-f', self.apply_filters])
 
-        args.append(self.input_file)
-
-        args.extend(self.subcommand_post_input_args())
+        args.extend(self.subcommand_input_args())
 
         return args
 
@@ -147,8 +145,8 @@ class Intersect(BcftoolsTask):
     def subcommand_args(self):
         return ['isec', '-p', self.output_dir]
 
-    def subcommand_post_input_args(self):
-        return [self.input_file2]
+    def subcommand_input_args(self):
+        return [self.input_file, self.input_file2]
 
     def output(self):
         return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
@@ -156,9 +154,8 @@ class Intersect(BcftoolsTask):
 class Merge(BcftoolsTask):
     """
     Merge the samples of two or more VCF files
-    TODO: support merging against an arbitrary number of files
     """
-    input_file2 = luigi.Parameter()
+    input_file = luigi.ListParameter()
 
     filter_logic = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
     info_rules = luigi.ListParameter(default=[], positional=False)
@@ -180,8 +177,8 @@ class Merge(BcftoolsTask):
 
         return args
 
-    def subcommand_post_input_args(self):
-        return [self.input_file2]
+    def subcommand_input_args(self):
+        return self.input_file
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
