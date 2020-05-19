@@ -50,6 +50,15 @@ class DynamicTaskWithOutputMixin(object):
 
         return getpaths(tasks)
 
+class CreateTaskOutputDirectoriesBeforeRunMixin(object):
+    """
+    Ensures that output directories exist before running the task.
+    """
+    def run(self):
+        for out in flatten_output(self):
+            out.makedirs()
+        return super(CreateTaskOutputDirectoriesBeforeRunMixin, self).run()
+
 class RemoveTaskOutputOnFailureMixin(object):
     """
     Extends a task to remove its outputs on failure.
