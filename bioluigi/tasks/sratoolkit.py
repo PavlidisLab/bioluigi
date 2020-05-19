@@ -50,7 +50,8 @@ class FastqDump(ScheduledExternalProgramTask):
     Extract FASTQs from a SRA archive
 
     The task output three targets: single-end reads (1 file) and paired-end
-    reads (2 files).
+    reads (2 files). Note that it is sufficient for either the single-end file
+    or both paired-end files to exist for the task to be considered complete.
 
     The number of concurrent fastq-dump jobs can be adjusted by setting the
     'fastq_dump_jobs' resource.
@@ -101,8 +102,10 @@ class FastqDump(ScheduledExternalProgramTask):
             super(FastqDump, self).run()
             # move every output to the final directory
             for out in self.output():
-                out.makedirs()
-                os.replace(join(self.temp_output_dir, basename(out.path)), out.path)
+                tmp_out_path = join(self.temp_output_dir, basename(out.path))
+                if os.path.exists(tmp_out_path):
+                    out.makedirs()
+                    os.replace(tmp_out_path, out.path)
         finally:
             shutil.rmtree(self.temp_output_dir)
 
@@ -111,3 +114,7 @@ class FastqDump(ScheduledExternalProgramTask):
         return [luigi.LocalTarget(join(self.output_dir, sra_accession + '.fastq.gz')),
                 luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
                 luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
+
+    def complete(self):
+        se, r1, r2 = self.output()
+        return se.exists() or (r1.exists() and r2.exists())
