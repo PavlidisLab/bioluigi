@@ -12,12 +12,15 @@ List all the tasks that match the given filters.
 
 .. code-block:: bash
 
-   bioluigi list [--status] [--detailed] [TASK_GLOB]
+   bioluigi list [--status] [--detailed] [--no-limit] [TASK_GLOB]
 
 - ``--status`` is used to filter tasks by status (i.e. ``PENDING``, ``RUNNING``,
   ``DONE``, ...) and can be specified multiple times.
 - ``--detailed`` triggers the detailed view produced by ``bioluigi view``
   subcommand.
+- ``--no-limit`` disable the limit to the number of returned tasks by the
+  scheduler. Note that this might freeze the scheduler thread for a couple of
+  seconds if a large number of tasks is queried.
 - ``TASK_GLOB`` is a UNIX glob pattern that match tasks names and identifiers
   according to :py:func:`fnmatch.fnmatch` rules.
 
