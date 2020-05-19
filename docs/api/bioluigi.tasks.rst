@@ -76,6 +76,14 @@ bioluigi.tasks.star module
    :undoc-members:
    :show-inheritance:
 
+bioluigi.tasks.utils module
+---------------------------
+
+.. automodule:: bioluigi.tasks.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 bioluigi.tasks.vep module
 -------------------------
 
