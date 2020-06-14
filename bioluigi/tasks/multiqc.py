@@ -17,7 +17,6 @@ class GenerateReport(ScheduledExternalProgramTask):
     title = luigi.OptionalParameter(default=None, positional=False)
     comment = luigi.OptionalParameter(default=None, positional=False)
 
-    walltime = datetime.timedelta(days=1)
     cpus = 1
 
     def program_args(self):

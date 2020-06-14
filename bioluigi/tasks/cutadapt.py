@@ -23,8 +23,6 @@ class CutadaptTask(ScheduledExternalProgramTask):
     trim_n = luigi.BoolParameter(default=False, positional=False)
     minimum_length = luigi.IntParameter(default=0, positional=False)
 
-    walltime = datetime.timedelta(hours=2)
-
     def on_failure(self, ex):
         logger.warning('Cleaning up outputs of %s due to failure.', repr(self))
         for out in flatten_output(self):

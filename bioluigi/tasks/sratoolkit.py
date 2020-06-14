@@ -63,7 +63,6 @@ class FastqDump(ScheduledExternalProgramTask):
 
     minimum_read_length = luigi.IntParameter(default=0, positional=False, description='Minimum read length to be extracted from the archive')
 
-    walltime = datetime.timedelta(days=1)
     cpus = 1
     memory = 1
 
