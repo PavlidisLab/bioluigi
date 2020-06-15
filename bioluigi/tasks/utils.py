@@ -61,11 +61,16 @@ class CreateTaskOutputDirectoriesBeforeRunMixin(object):
 
 class RemoveTaskOutputOnFailureMixin(object):
     """
-    Extends a task to remove its outputs on failure.
+    Remove a task outputs on failure.
+
+    This only applies for output that have a defined 'remove' method.
     """
     def on_failure(self, err):
-        logger.info('Removing task output of {} due to failure...', repr(self))
+        logger.info('Removing task output of %s due to failure.', repr(self))
         for out in flatten_output(self):
             if out.exists() and hasattr(out, 'remove'):
-                out.remove()
+                try:
+                    out.remove()
+                except:
+                    logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
         return super(RemoveTaskOutputOnFailureMixin, self).on_failure(err)

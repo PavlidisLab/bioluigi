@@ -6,12 +6,13 @@ from luigi.task import flatten_output
 
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
+from .utils import RemoveTaskOutputOnFailureMixin
 
 logger = logging.getLogger('luigi-interface')
 
 cfg = bioluigi()
 
-class CutadaptTask(ScheduledExternalProgramTask):
+class CutadaptTask(RemoveTaskOutputOnFailureMixin, ScheduledExternalProgramTask):
     """
     Base class for all cutadapt-derived tasks.
     """
@@ -22,13 +23,6 @@ class CutadaptTask(ScheduledExternalProgramTask):
 
     trim_n = luigi.BoolParameter(default=False, positional=False)
     minimum_length = luigi.IntParameter(default=0, positional=False)
-
-    def on_failure(self, ex):
-        logger.warning('Cleaning up outputs of %s due to failure.', repr(self))
-        for out in flatten_output(self):
-            if out.exists():
-                out.remove()
-        return super(CutadaptTask, self).on_failure(ex)
 
     def program_args(self):
         args = [cfg.cutadapt_bin]
