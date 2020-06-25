@@ -17,8 +17,6 @@ class GenerateReport(ScheduledExternalProgramTask):
     title = luigi.OptionalParameter(default=None, positional=False)
     comment = luigi.OptionalParameter(default=None, positional=False)
 
-    cpus = 1
-
     def program_args(self):
         args = [cfg.multiqc_bin, '--outdir', self.output_dir]
         if self.title is not None:

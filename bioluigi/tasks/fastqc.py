@@ -12,9 +12,6 @@ class GenerateReport(ScheduledExternalProgramTask):
     input_file = luigi.Parameter()
     output_dir = luigi.Parameter()
 
-    cpus = 1
-    memory = 2
-
     @staticmethod
     def gen_report_basename(fastq_path):
         sample_name, ext = splitext(basename(fastq_path))

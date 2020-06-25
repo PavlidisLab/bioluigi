@@ -20,7 +20,6 @@ class BcftoolsTask(ScheduledExternalProgramTask):
     apply_filters = luigi.OptionalParameter(positional=False, default=None)
 
     # FIXME: the '--threads' flag does not seem to work
-    cpus = 1
 
     def subcommand_args(self):
         """Returns specific sub-command arguments."""
