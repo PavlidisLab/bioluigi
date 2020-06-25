@@ -80,7 +80,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     scheduler_partition = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False, significant=False, description='Scheduler partition (or queue) to use if supported')
     scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False, description='Extra arguments to pass to the scheduler')
 
-    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(days=1), positional=False, significant=False, description='Amout of time to allocate for the task')
+    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(), positional=False, significant=False, description='Amout of time to allocate for the task, default value of zero implies unlimited time')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
 
