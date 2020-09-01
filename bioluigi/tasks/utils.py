@@ -20,8 +20,12 @@ class DynamicWrapperTask(luigi.Task):
             return False
 
         # ensure that all dynamic dependencies are met
-        return all(req.complete() for chunk in self.run()
-                   for req in flatten(chunk))
+        try:
+            return all(req.complete() for chunk in self.run()
+                       for req in flatten(chunk))
+        except:
+            logger.exception('%s failed at run() step; the exception will not be raised because Luigi is still building the graph.', repr(self))
+            return False
 
 class TaskWithOutputMixin(object):
     """
