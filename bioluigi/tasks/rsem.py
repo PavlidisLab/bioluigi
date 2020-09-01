@@ -69,9 +69,6 @@ class CalculateExpression(ScheduledExternalProgramTask):
 
         args.extend(['-p', self.cpus])
 
-        if self.upstream_read_files[0].endswith('.gz'):
-            args.append('--gzipped-read-file')
-
         if len(self.upstream_read_files) == 1:
             pass
         elif len(self.upstream_read_files) == 2:
@@ -87,6 +84,9 @@ class CalculateExpression(ScheduledExternalProgramTask):
             if self.star_path is not None:
                 args.extend(['--star-path', self.star_path])
 
+            if self.upstream_read_files[0].endswith('.gz'):
+                args.append('--star-gzipped-read-file')
+
         args.extend(self.extra_args)
 
         args.extend(self.upstream_read_files)
@@ -95,6 +95,6 @@ class CalculateExpression(ScheduledExternalProgramTask):
         return args
 
     def output(self):
-        return ['{}.isoforms.results'.format(self.sample_name),
-                '{}.genes.results'.format(self.sample_name)]
+        return [luigi.LocalTarget('{}.isoforms.results'.format(self.sample_name)),
+                luigi.LocalTarget('{}.genes.results'.format(self.sample_name))]
 
