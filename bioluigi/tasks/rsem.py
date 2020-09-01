@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import exists, join
 
 import luigi
 from luigi.util import requires
@@ -7,6 +7,18 @@ from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
+
+class RsemReference(luigi.Target):
+    """
+    Represents the target of rsem-prepare-reference script.
+    """
+    def __init__(self, reference_name):
+        self.reference_name = reference_name
+
+    def exists(self):
+        exts = ['grp', 'ti', 'seq', 'chrlist']
+        return all(exists('{}.{}'.format(self.reference_name, ext))
+                for ext in exts)
 
 class PrepareReference(ScheduledExternalProgramTask):
     task_namespace = 'rsem'
@@ -30,16 +42,22 @@ class PrepareReference(ScheduledExternalProgramTask):
             if self.star_path is not None:
                 args.extend(['--star-path', self.star_path])
 
+        args.extend(['-p', self.cpus])
+
         args.extend(self.reference_fasta_files)
 
+        args.append(self.reference_name)
+
         return args
+
+    def output(self):
+        return RsemReference(self.reference_name)
 
 @requires(PrepareReference)
 class CalculateExpression(ScheduledExternalProgramTask):
     task_namespace = 'rsem'
 
     upstream_read_files = luigi.ListParameter()
-    reference_name = luigi.Parameter()
     sample_name = luigi.Parameter()
 
     strandedness = luigi.ChoiceParameter(default='none', choices=['none', 'forward', 'reverse'], positional=False)
@@ -59,7 +77,6 @@ class CalculateExpression(ScheduledExternalProgramTask):
         elif len(self.upstream_read_files) == 2:
             args.append('--paired-end')
         else:
-            print(self.upstream_read_files)
             raise ValueError('Unexpected number of mates: {}.'.format(len(self.upstream_read_files)))
 
         args.extend(['--strandedness', self.strandedness])
