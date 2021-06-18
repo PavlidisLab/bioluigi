@@ -30,5 +30,17 @@ class GenerateReport(ScheduledExternalProgramTask):
         args.extend(self.input_dirs)
         return args
 
+    def run(self):
+        try:
+            return super(GenerateReport, self).run()
+        finally:
+            self._did_run = True
+
     def output(self):
         return luigi.LocalTarget(join(self.output_dir, 'multiqc_report.html'))
+
+    def complete(self):
+        # since we're forcing the task, we first ignore any existing completion state
+        if self.force and not hasattr(self, '_did_run'):
+            return False
+        return super(GenerateReport, self).complete()
