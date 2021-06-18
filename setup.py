@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='bioluigi',
-      version='0.0.3',
+      version='0.0.5',
       description='Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines',
       long_description='file: README.md',
       author='Guillaume Poirier-Morency',
