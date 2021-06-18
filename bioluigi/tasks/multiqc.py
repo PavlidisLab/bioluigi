@@ -17,12 +17,16 @@ class GenerateReport(ScheduledExternalProgramTask):
     title = luigi.OptionalParameter(default=None, positional=False)
     comment = luigi.OptionalParameter(default=None, positional=False)
 
+    force = luigi.BoolParameter(default=False, positional=False)
+
     def program_args(self):
         args = [cfg.multiqc_bin, '--outdir', self.output_dir]
         if self.title is not None:
             args.extend(['--title', self.title])
         if self.comment is not None:
             args.extend(['--comment', self.comment])
+        if self.force:
+            args.append('--force')
         args.extend(self.input_dirs)
         return args
 
