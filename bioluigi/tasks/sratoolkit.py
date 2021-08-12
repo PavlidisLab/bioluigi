@@ -79,7 +79,6 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--gzip',
                 '--clip',
                 '--skip-technical',
-                '--readids',
                 '--dumpbase',
                 '--split-e',
                 '--keep-empty-files']
