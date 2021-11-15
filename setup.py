@@ -3,7 +3,7 @@ import sys
 
 # Luigi 3+ does not support Python 2
 if sys.version_info.major == 2:
-    luigi_dep = 'luigi<3'
+    luigi_dep = 'luigi~=2.8'
 else:
     luigi_dep = 'luigi'
 
