@@ -1,4 +1,11 @@
 from setuptools import setup, find_packages
+import sys
+
+# Luigi 3+ does not support Python 2
+if sys.version_info.major == 2:
+    luigi_dep = 'luigi<3'
+else:
+    luigi_dep = 'luigi'
 
 setup(name='bioluigi',
       version='0.0.6',
@@ -10,4 +17,4 @@ setup(name='bioluigi',
       entry_points={
           'console_scripts': [
               'bioluigi = bioluigi.cli:main']},
-      install_requires=['click', 'luigi', 'requests', 'babel'])
+          install_requires=['click', luigi_dep, 'requests', 'babel'])
