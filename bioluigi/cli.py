@@ -246,7 +246,7 @@ def forgive(ctx, task_id, recursive):
     """
     scheduler_url = ctx.obj['SCHEDULER_URL']
 
-    toforgive = []
+    toforgive = [task_id]
 
     if recursive:
         deps = rpc(scheduler_url, 'dep_graph', task_id=task_id)
