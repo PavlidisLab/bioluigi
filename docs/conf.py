@@ -51,7 +51,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx_rtd_theme',
-    'm2r'
+    'm2r2'
 ]
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
