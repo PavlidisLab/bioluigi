@@ -48,7 +48,7 @@ class CutadaptTask(RemoveTaskOutputOnFailureMixin, ScheduledExternalProgramTask)
             args.extend(['--minimum-length', self.minimum_length])
 
         if self.report_file:
-            args.extends(['--json', self.report_file])
+            args.extend(['--json', self.report_file])
 
         return args
 
