@@ -25,6 +25,8 @@ class CutadaptTask(RemoveTaskOutputOnFailureMixin, ScheduledExternalProgramTask)
     trim_n = luigi.BoolParameter(default=False, positional=False)
     minimum_length = luigi.IntParameter(default=0, positional=False)
 
+    report_file = luigi.Parameter(positional=False, description='Destination for the JSON report')
+
     def program_args(self):
         args = [cfg.cutadapt_bin]
 
@@ -44,6 +46,9 @@ class CutadaptTask(RemoveTaskOutputOnFailureMixin, ScheduledExternalProgramTask)
 
         if self.minimum_length:
             args.extend(['--minimum-length', self.minimum_length])
+
+        if self.report_file:
+            args.extends(['--json', self.report_file])
 
         return args
 
