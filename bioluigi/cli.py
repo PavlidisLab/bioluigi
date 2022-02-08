@@ -144,13 +144,13 @@ def list(ctx, task_glob, status, user, summary, detailed, no_limit):
             try:
                 tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s, limit=limit))
             except TooManyTasksError as e:
-                click.echo(e)
+                click.echo(e, err=True)
                 return
     else:
         try:
             tasks.update(rpc(scheduler_url, 'task_list', search=search, limit=limit))
         except TooManyTasksError as e:
-            click.echo(e)
+            click.echo(e, err=True)
             return
 
     fix_tasks_dict(tasks)
@@ -166,7 +166,7 @@ def list(ctx, task_glob, status, user, summary, detailed, no_limit):
                       if task_matches(task, task_glob)]
 
     if not filtered_tasks:
-        click.echo('No task match the provided query.')
+        click.echo('No task match the provided query.', err=True)
         return
 
     task_id_width = max(len(click.style(task['id'], bold=True)) for task in filtered_tasks)
@@ -209,7 +209,7 @@ def show(ctx, task_id):
     try:
         click.echo(formatter.format(tasks[task_id]))
     except KeyError:
-        click.echo('No such task %s.' % task_id)
+        click.echo('No such task %s.' % task_id, err=True)
         sys.exit(1)
 
 @main.command()
@@ -233,7 +233,7 @@ def reenable(ctx, task_id, recursive):
             rpc(scheduler_url, 're_enable_task', task_id=task_id)
             click.echo('%s has been re-enabled.' % task_id)
         except requests.exceptions.HTTPError as e:
-            click.echo('Failed to re-enable {}: {}'.format(task_id, e))
+            click.echo('Failed to re-enable {}: {}'.format(task_id, e), err=True)
             continue
 
 @main.command()
@@ -257,5 +257,5 @@ def forgive(ctx, task_id, recursive):
             rpc(scheduler_url, 'forgive_failures', task_id=task_id)
             click.echo('%s has been forgiven.' % task_id)
         except requests.exceptions.HTTPError as e:
-            click.echo('Failed to forgive {}: {}'.format(task_id, e))
+            click.echo('Failed to forgive {}: {}'.format(task_id, e), err=True)
             continue
