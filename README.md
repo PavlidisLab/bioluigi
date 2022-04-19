@@ -1,5 +1,6 @@
 # Bioluigi
 
+[![Python package](https://github.com/PavlidisLab/bioluigi/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/PavlidisLab/bioluigi/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/bioluigi/badge/?version=latest)](https://bioluigi.readthedocs.io/en/latest/?badge=latest)
 
 Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines
