@@ -10,7 +10,6 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["2.7", "3.6"]
 
@@ -25,6 +24,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install package
+      run: pip install .
     - name: Test with pytest
       run: |
         pytest
