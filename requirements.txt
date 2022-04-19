@@ -2,4 +2,4 @@ click
 luigi
 pytest
 m2r2
-mistune
+mistune==0.8.4
