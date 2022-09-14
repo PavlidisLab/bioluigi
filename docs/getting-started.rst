@@ -6,7 +6,7 @@ pip.
 
 .. code-block:: bash
 
-   pip install git+https://github.com/PavlidisLab/bioluigi.git
+   pip install bioluigi
 
 Then, we need to create a ``luigi.cfg`` file to indicate the location of the
 tools that will be invoked. You can omit this step if they are defined in your
