@@ -11,6 +11,10 @@ cfg = bioluigi()
 class RsemReference(luigi.Target):
     """
     Represents the target of rsem-prepare-reference script.
+
+    A valid reference consists of a `{reference_name}.grp`,
+    `{reference_name}.ti`, `{reference_name}.seq` and `{reference_name}.chrlist`
+    files.
     """
     def __init__(self, reference_name):
         self.reference_name = reference_name
@@ -21,6 +25,16 @@ class RsemReference(luigi.Target):
                 for ext in exts)
 
 class PrepareReference(ScheduledExternalProgramTask):
+    """
+    Prepare a RSEM reference using rsem-prepare-reference.
+
+    For a reference to be valid, one annotation file in GTF format and one or
+    more reference FASTA files must be provided.
+
+    The target of this task is a special :class:`RsemReference` target that
+    checks for the existence of all the expected files in the generated
+    reference.
+    """
     task_namespace = 'rsem'
 
     annotation_file = luigi.Parameter()
@@ -55,6 +69,15 @@ class PrepareReference(ScheduledExternalProgramTask):
 
 @requires(PrepareReference)
 class CalculateExpression(ScheduledExternalProgramTask):
+    """
+    Calculate genes and isoforms expression using rsem-calculate-expression.
+
+    The input FASTQ files may or may not be compressed with gzip. This is
+    detected by looking at the file extension against the '.gz' suffix.
+
+    The output of this task is a pair of target for the isoforms and genes
+    results, in that order.
+    """
     task_namespace = 'rsem'
 
     upstream_read_files = luigi.ListParameter()
