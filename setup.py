@@ -8,7 +8,7 @@ else:
     luigi_dep = 'luigi'
 
 setup(name='bioluigi',
-      version='0.0.10',
+      version='0.0.12',
       description='Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines',
       long_description='file: README.md',
       long_description_content_type='text/markdown',
