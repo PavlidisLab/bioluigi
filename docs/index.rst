@@ -12,8 +12,7 @@
    getting-started
    cli
    schedulers
-   api/bioluigi
-   api/bioluigi.tasks
+   api/modules
 
 Indices and tables
 ------------------

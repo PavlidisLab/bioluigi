@@ -92,7 +92,6 @@ bioluigi.tasks.vep module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 
