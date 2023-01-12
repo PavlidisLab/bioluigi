@@ -60,7 +60,8 @@ class CreateTaskOutputDirectoriesBeforeRunMixin(object):
     """
     def run(self):
         for out in flatten_output(self):
-            out.makedirs()
+            if hasattr(out, 'makedirs'):
+                out.makedirs()
         return super(CreateTaskOutputDirectoriesBeforeRunMixin, self).run()
 
 class RemoveTaskOutputOnFailureMixin(object):
