@@ -54,8 +54,8 @@ class SlurmScheduler(Scheduler):
             '--time', '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
             '--cpus-per-task', str(task.cpus)])
-        if cfg.scheduler_partition:
-            srun_args.extend(['--partition', cfg.scheduler_partition])
+        if task.scheduler_partition:
+            srun_args.extend(['--partition', task.scheduler_partition])
         # FIXME: task.priority is not reliable and does not reflect what the
         # scheduler
         # TODO: srun_args.extend([--priority', str(max(0, cfg.scheduler_priority))])
