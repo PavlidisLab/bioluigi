@@ -80,7 +80,7 @@ class FastqDump(ScheduledExternalProgramTask):
                 '--clip',
                 '--skip-technical',
                 '--dumpbase',
-                '--split-e',
+                '--split-3',
                 '--keep-empty-files']
 
         if self.minimum_read_length > 0:
