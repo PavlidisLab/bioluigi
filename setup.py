@@ -12,7 +12,7 @@ with open(join(dirname(__file__), 'README.md')) as f:
     long_description = f.read()
 
 setup(name='bioluigi',
-      version='0.0.16',
+      version='0.1.0',
       description='Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines',
       long_description=long_description,
       long_description_content_type='text/markdown',
