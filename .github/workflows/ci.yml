@@ -25,6 +25,8 @@ jobs:
         python -m pip install pytest
     - name: Install package
       run: pip install .
+    - name: Create a test Luigi configuration
+      run: ln -s example.luigi.cfg luigi.cfg
     - name: Test with pytest
       run: |
         pytest
