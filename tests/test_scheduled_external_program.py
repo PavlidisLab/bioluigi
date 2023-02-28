@@ -1,24 +1,48 @@
 import os
 import luigi
+import luigi.parameter
 from bioluigi.scheduled_external_program import ScheduledExternalProgramTask, Scheduler, SlurmScheduler
 from distutils.spawn import find_executable
 import pytest
 
 class MyTask(ScheduledExternalProgramTask):
+    cpus = 4
+    unique_id = luigi.Parameter(visibility=luigi.parameter.ParameterVisibility.PRIVATE)
+    def __init__(self, *args, **kwds):
+        super(MyTask, self).__init__(*args, **kwds)
+        self._completed = False
     def program_args(self):
         return ['true']
+    def run(self):
+        ret = super(MyTask, self).run()
+        self._completed = True
+        return ret;
+    def complete(self):
+        return self._completed
 
 def test_default_scheduler():
-    assert MyTask().scheduler == 'local'
-    assert MyTask().scheduler_partition == ''
-    luigi.build([MyTask()], local_scheduler=True)
+    task = MyTask("1")
+    assert task.scheduler == 'local'
+    assert task.scheduler_partition == ''
+    assert task.resources['cpus'] == 4
+    assert not task.complete()
+    luigi.build([task], local_scheduler=True)
+    assert task.complete()
 
 def test_local_scheduler():
-    luigi.build([MyTask(scheduler='local')], local_scheduler=True)
+    task = MyTask("2", scheduler='local')
+    assert not task.complete()
+    luigi.build([task], local_scheduler=True)
+    assert task.complete()
 
 def test_slurm_scheduler():
     if find_executable('srun') is None:
         pytest.skip('srun is needed to run Slurm tests.')
-    assert 'slurm_jobs' in MyTask(scheduler='slurm').resources
-    assert MyTask(scheduler='slurm').resources['slurm_jobs'] == 1
-    luigi.build([MyTask(scheduler='slurm')], local_scheduler=True)
+    task = MyTask("3", scheduler='slurm')
+    assert 'slurm_jobs' in task.resources
+    assert 'slurm_cpus' in task.resources
+    assert task.resources['slurm_jobs'] == 1
+    assert task.resources['slurm_cpus'] == 4
+    assert not task.completed()
+    luigi.build([task], local_scheduler=True)
+    assert task.complete()

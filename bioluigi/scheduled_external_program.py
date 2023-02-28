@@ -99,7 +99,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
             # local_jobs is actually constrained by the number of workers
             return {'cpus': self.cpus, 'memory': self.memory}
         else:
-            return {'{}_jobs'.format(self.scheduler): 1}
+            return {'{}_jobs'.format(self.scheduler): 1, '{}_cpus': self.cpus}
 
     def run(self):
         if self.scheduler == 'local':
