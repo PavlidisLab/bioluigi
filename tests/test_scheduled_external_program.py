@@ -43,6 +43,6 @@ def test_slurm_scheduler():
     assert 'slurm_cpus' in task.resources
     assert task.resources['slurm_jobs'] == 1
     assert task.resources['slurm_cpus'] == 4
-    assert not task.completed()
+    assert not task.complete()
     luigi.build([task], local_scheduler=True)
     assert task.complete()
