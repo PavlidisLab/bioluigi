@@ -21,6 +21,8 @@ class Prefetch(ScheduledExternalProgramTask):
     """
     task_namespace = 'sratoolkit'
 
+    retry_count = 3
+
     srr_accession = luigi.Parameter()
     output_file = luigi.Parameter()
     max_size = luigi.IntParameter(default=20, positional=False, significant=False, description='Maximum download size in gigabytes')
