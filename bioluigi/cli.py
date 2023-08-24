@@ -2,15 +2,20 @@
 Command-line interface for interacting with Luigi scheduler.
 """
 
-import json
-import requests
 import datetime
-import click
-from fnmatch import fnmatch
+import json
 import sys
-from os.path import join
 from collections import Counter
+from fnmatch import fnmatch
+from os.path import join
+
+import click
+import luigi.cmdline
+import requests
 from babel.numbers import format_number
+from luigi.interface import core
+
+luigi_cfg = core()
 
 class TooManyTasksError(Exception):
     def __init__(self, num_tasks):
@@ -18,7 +23,8 @@ class TooManyTasksError(Exception):
     def __str__(self):
         return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(format_number(self.num_tasks) if self.num_tasks else 'an unknown amount of')
 
-def rpc(scheduler_url, method, **kwargs):
+def rpc(method, **kwargs):
+    scheduler_url = luigi_cfg.scheduler_url if luigi_cfg.scheduler_url else f'http://{luigi_cfg.scheduler_host}:{luigi_cfg.scheduler_port}/'
     url = join(scheduler_url, 'api', method)
     payload = {'data': json.dumps(kwargs)}
     res = requests.get(url, params=payload if kwargs else None)
@@ -115,10 +121,8 @@ def fix_tasks_dict(tasks):
         t['last_updated'] = t['last_updated'] and datetime.datetime.fromtimestamp(t['last_updated'])
 
 @click.group()
-@click.option('--scheduler-url', default='http://localhost:8082/')
-@click.pass_context
-def main(ctx, scheduler_url):
-    ctx.obj = {'SCHEDULER_URL': scheduler_url}
+def main():
+    pass
 
 @main.command()
 @click.argument('task_glob', required=False)
@@ -132,8 +136,6 @@ def list(ctx, task_glob, status, user, summary, detailed, no_limit):
     """
     List all tasks that match the given pattern and filters.
     """
-    scheduler_url = ctx.obj['SCHEDULER_URL']
-
     search = task_glob.replace('*', '') if task_glob else None
 
     limit = None if no_limit else 100000
@@ -142,13 +144,13 @@ def list(ctx, task_glob, status, user, summary, detailed, no_limit):
     if status:
         for s in status:
             try:
-                tasks.update(rpc(scheduler_url, 'task_list', search=search, status=s, limit=limit))
+                tasks.update(rpc('task_list', search=search, status=s, limit=limit))
             except TooManyTasksError as e:
                 click.echo(e, err=True)
                 return
     else:
         try:
-            tasks.update(rpc(scheduler_url, 'task_list', search=search, limit=limit))
+            tasks.update(rpc('task_list', search=search, limit=limit))
         except TooManyTasksError as e:
             click.echo(e, err=True)
             return
@@ -197,10 +199,8 @@ def show(ctx, task_id):
     Show the details of a specific task given its identifier.
     TASK_ID Task identifier
     """
-    scheduler_url = ctx.obj['SCHEDULER_URL']
-
     tasks = {}
-    for status, t in rpc(scheduler_url, 'task_search', task_str=task_id).items():
+    for status, t in rpc('task_search', task_str=task_id).items():
         tasks.update(t)
     fix_tasks_dict(tasks)
 
@@ -220,17 +220,15 @@ def reenable(ctx, task_id, recursive):
     """
     Reenable a disabled task.
     """
-    scheduler_url = ctx.obj['SCHEDULER_URL']
-
     toreenable = [task_id]
 
     if recursive:
-        deps = rpc(scheduler_url, 'dep_graph', task_id=task_id)
+        deps = rpc('dep_graph', task_id=task_id)
         toreenable.extend(k for k in deps if deps[k]['status'] == 'DISABLED')
 
     for task_id in toreenable:
         try:
-            rpc(scheduler_url, 're_enable_task', task_id=task_id)
+            rpc('re_enable_task', task_id=task_id)
             click.echo('%s has been re-enabled.' % task_id)
         except requests.exceptions.HTTPError as e:
             click.echo('Failed to re-enable {}: {}'.format(task_id, e), err=True)
@@ -244,17 +242,15 @@ def forgive(ctx, task_id, recursive):
     """
     Forgive a failed task.
     """
-    scheduler_url = ctx.obj['SCHEDULER_URL']
-
     toforgive = [task_id]
 
     if recursive:
-        deps = rpc(scheduler_url, 'dep_graph', task_id=task_id)
+        deps = rpc('dep_graph', task_id=task_id)
         toforgive.extend(k for k in deps if deps[k]['status'] == 'FAILED')
 
     for task_id in toforgive:
         try:
-            rpc(scheduler_url, 'forgive_failures', task_id=task_id)
+            rpc('forgive_failures', task_id=task_id)
             click.echo('%s has been forgiven.' % task_id)
         except requests.exceptions.HTTPError as e:
             click.echo('Failed to forgive {}: {}'.format(task_id, e), err=True)
