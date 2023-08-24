@@ -12,7 +12,6 @@ from os.path import join
 import click
 import luigi.cmdline
 import requests
-from babel.numbers import format_number
 from luigi.interface import core
 
 luigi_cfg = core()
@@ -21,7 +20,7 @@ class TooManyTasksError(Exception):
     def __init__(self, num_tasks):
         self.num_tasks = num_tasks
     def __str__(self):
-        return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(format_number(self.num_tasks) if self.num_tasks else 'an unknown amount of')
+        return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(self.num_tasks if self.num_tasks else 'an unknown amount of')
 
 def rpc(method, **kwargs):
     scheduler_url = luigi_cfg.scheduler_url if luigi_cfg.scheduler_url else f'http://{luigi_cfg.scheduler_host}:{luigi_cfg.scheduler_port}/'
