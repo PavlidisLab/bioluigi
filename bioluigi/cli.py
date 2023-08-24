@@ -130,8 +130,7 @@ def main():
 @click.option('--summary', is_flag=True)
 @click.option('--detailed', is_flag=True)
 @click.option('--no-limit', is_flag=True)
-@click.pass_context
-def list(ctx, task_glob, status, user, summary, detailed, no_limit):
+def list(task_glob, status, user, summary, detailed, no_limit):
     """
     List all tasks that match the given pattern and filters.
     """
@@ -193,8 +192,7 @@ def submit(args):
 
 @main.command()
 @click.argument('task_id')
-@click.pass_context
-def show(ctx, task_id):
+def show(task_id):
     """
     Show the details of a specific task given its identifier.
     TASK_ID Task identifier
@@ -215,8 +213,7 @@ def show(ctx, task_id):
 @main.command()
 @click.argument('task_id')
 @click.option('--recursive', is_flag=True)
-@click.pass_context
-def reenable(ctx, task_id, recursive):
+def reenable(task_id, recursive):
     """
     Reenable a disabled task.
     """
@@ -237,8 +234,7 @@ def reenable(ctx, task_id, recursive):
 @main.command()
 @click.argument('task_id')
 @click.option('--recursive', is_flag=True)
-@click.pass_context
-def forgive(ctx, task_id, recursive):
+def forgive(task_id, recursive):
     """
     Forgive a failed task.
     """
