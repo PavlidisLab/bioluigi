@@ -184,8 +184,9 @@ def list(ctx, task_glob, status, user, summary, detailed, no_limit):
 
         click.echo_via_pager(formatter.format(t) for t in sorted(filtered_tasks, key=task_sort_key))
 
-@main.command()
-def submit(*args):
+@main.command(context_settings=dict(ignore_unknown_options=True, help_option_names=[]))
+@click.argument('args', nargs=-1)
+def submit(args):
     """
     Schedule a given task for execution.
     """
