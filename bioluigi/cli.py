@@ -55,6 +55,15 @@ class TaskFormatter(object):
     def format(self, task):
         raise NotImplementedError
 
+class ExtractingParameterTaskFormatter(TaskFormatter):
+    def __init__(self, field):
+        self.field = field
+    def format(self, task):
+        if self.field in task['params']:
+            return str(task['params'][self.field]) + '\n'
+        else:
+            return ''
+
 class InlineTaskFormatter(TaskFormatter):
     """Format a task for inline display."""
     def __init__(self, task_id_width, status_width=17):
@@ -129,8 +138,9 @@ def main():
 @click.option('--user', multiple=True)
 @click.option('--summary', is_flag=True)
 @click.option('--detailed', is_flag=True)
+@click.option('--extract-parameter')
 @click.option('--no-limit', is_flag=True)
-def list(task_glob, status, user, summary, detailed, no_limit):
+def list(task_glob, status, user, summary, detailed, extract_parameter, no_limit):
     """
     List all tasks that match the given pattern and filters.
     """
@@ -175,7 +185,9 @@ def list(task_glob, status, user, summary, detailed, no_limit):
         formatter = TasksSummaryFormatter()
         click.echo(formatter.format(filtered_tasks))
     else:
-        if detailed:
+        if extract_parameter:
+            formatter = ExtractingParameterTaskFormatter(field=extract_parameter)
+        elif detailed:
             formatter = DetailedTaskFormatter()
         else:
             formatter = InlineTaskFormatter(task_id_width=task_id_width)
