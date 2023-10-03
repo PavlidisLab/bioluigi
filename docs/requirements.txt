@@ -1,3 +1,4 @@
 luigi
 m2r2
 mistune==0.8.4
+sphinx_rtd_theme
