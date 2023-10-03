@@ -55,6 +55,10 @@ class TaskFormatter(object):
     def format(self, task):
         raise NotImplementedError
 
+class ExtractingIdTaskFormatter(TaskFormatter):
+    def format(self, task):
+        return task['id'] + '\n'
+
 class ExtractingParameterTaskFormatter(TaskFormatter):
     def __init__(self, field):
         self.field = field
@@ -138,9 +142,10 @@ def main():
 @click.option('--user', multiple=True)
 @click.option('--summary', is_flag=True)
 @click.option('--detailed', is_flag=True)
+@click.option('--extract-id', is_flag=True)
 @click.option('--extract-parameter')
 @click.option('--no-limit', is_flag=True)
-def list(task_glob, status, user, summary, detailed, extract_parameter, no_limit):
+def list(task_glob, status, user, summary, detailed, extract_id, extract_parameter, no_limit):
     """
     List all tasks that match the given pattern and filters.
     """
@@ -185,7 +190,9 @@ def list(task_glob, status, user, summary, detailed, extract_parameter, no_limit
         formatter = TasksSummaryFormatter()
         click.echo(formatter.format(filtered_tasks))
     else:
-        if extract_parameter:
+        if extract_id:
+            formatter = ExtractingIdTaskFormatter()
+        elif extract_parameter:
             formatter = ExtractingParameterTaskFormatter(field=extract_parameter)
         elif detailed:
             formatter = DetailedTaskFormatter()
