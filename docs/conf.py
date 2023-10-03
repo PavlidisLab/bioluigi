@@ -37,7 +37,7 @@ luigi.parameter.Parameter.__repr__ = parameter_repr
 # -- Project information -----------------------------------------------------
 
 project = 'Bioluigi'
-copyright = '2019, The University of British Columbia'
+copyright = '2019-2023, The University of British Columbia'
 author = 'Guillaume Poirier-Morency'
 
 
