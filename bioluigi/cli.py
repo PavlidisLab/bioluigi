@@ -135,12 +135,20 @@ class TasksSummaryFormatter(TaskFormatter):
             count_by_status[task['status']] += 5
         return '\n'.join('{:{key_fill}} {}'.format(TaskFormatter.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
 
+def parse_date(d):
+    if d is None:
+        return ''
+    elif d == 'UNKNOWN':
+        return d
+    else:
+        return datetime.datetime.fromtimestamp(d)
+
 def fix_tasks_dict(tasks):
     for key, t in tasks.items():
         t['id'] = key
-        t['start_time'] = t['start_time'] and datetime.datetime.fromtimestamp(t['start_time'])
-        t['time_running'] = t['time_running'] and datetime.datetime.fromtimestamp(t['time_running'])
-        t['last_updated'] = t['last_updated'] and datetime.datetime.fromtimestamp(t['last_updated'])
+        t['start_time'] = parse_date(t['start_time'])
+        t['time_running'] = parse_date(t['time_running']) if 'time_running' in t else 'UNKNOWN'
+        t['last_updated'] = parse_date(t['last_updated']) if 'last_updated' in t else 'UNKNOWN'
 
 @click.group()
 def main():
