@@ -139,13 +139,13 @@ def main():
 
 @main.command()
 @click.argument('task_glob', required=False)
-@click.option('--status', multiple=True)
-@click.option('--user', multiple=True)
-@click.option('--summary', is_flag=True)
-@click.option('--detailed', is_flag=True)
-@click.option('--extract-id', is_flag=True)
-@click.option('--extract-parameter')
-@click.option('--no-limit', is_flag=True)
+@click.option('--status', multiple=True, help='Filter tasks by status.')
+@click.option('--user', multiple=True, help='Filter tasks by submitted.')
+@click.option('--summary', is_flag=True, help='Produce a summary output for each task.')
+@click.option('--detailed', is_flag=True, help='Produce a detailed output for each task.')
+@click.option('--extract-id', is_flag=True, help='Extract the task ID.')
+@click.option('--extract-parameter', help='Extract the given parameter.')
+@click.option('--no-limit', is_flag=True, help='Do not limit the number of tasks retrieved.')
 def list(task_glob, status, user, summary, detailed, extract_id, extract_parameter, no_limit):
     """
     List all tasks that match the given pattern and filters.
@@ -232,9 +232,9 @@ def show(task_id):
 
 @main.command()
 @click.argument('task_id')
-@click.option('--forgive', is_flag=True)
-@click.option('--recursive', is_flag=True)
-def reenable(task_id, forgive, recursive):
+@click.option('--recursive', is_flag=True, help='Reenable all the dependencies of a task.')
+@click.option('--forgive', is_flag=True, help='Forgive the task once it\'s been reenabled.')
+def reenable(task_id, recursive, forgive):
     """
     Reenable a disabled task.
     """
@@ -256,7 +256,7 @@ def reenable(task_id, forgive, recursive):
 
 @main.command()
 @click.argument('task_id')
-@click.option('--recursive', is_flag=True)
+@click.option('--recursive', is_flag=True, help='Forgive all the dependencies of a task.')
 def forgive(task_id, recursive):
     """
     Forgive a failed task.
