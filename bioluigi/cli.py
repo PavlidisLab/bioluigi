@@ -2,9 +2,9 @@
 Command-line interface for interacting with Luigi scheduler.
 """
 
-import datetime
 import json
 import sys
+from datetime import datetime
 from collections import Counter
 from fnmatch import fnmatch
 from os.path import join
@@ -35,7 +35,7 @@ def rpc(method, **kwargs):
 
 def task_sort_key(task):
     """Produce a key to sort tasks by relevance."""
-    return datetime.datetime.now() - (task['time_running'] if task['status'] == 'RUNNING' else task['last_updated'])
+    return datetime.now() - (task['time_running'] if task['status'] == 'RUNNING' else task['last_updated'])
 
 def task_matches(task, task_glob):
     """Match a task against a glob pattern."""
@@ -84,7 +84,7 @@ class InlineTaskFormatter(TaskFormatter):
 
     def format(self, task):
         if task['status'] == 'RUNNING':
-            tr = (datetime.datetime.now() - task['time_running'])
+            tr = (datetime.now() - task['time_running'])
         else:
             tr = task['last_updated']
 
@@ -122,7 +122,7 @@ Workers:\n\t{workers}\n'''.format(
         status_message=task['status_message'] if task['status_message'] else 'No status message were received for this task.',
         start_time=task['start_time'],
         last_updated=task['last_updated'],
-        time_running=(datetime.datetime.now() - task['time_running']) if task['status'] == 'RUNNING' else '',
+        time_running=(datetime.now() - task['time_running']) if task['status'] == 'RUNNING' else '',
         params=self.format_dl(task['params']) if task['params'] else 'No parameters were set.',
         resources=self.format_dl(task['resources']) if task['resources'] else 'No resources were requested for the execution of this task.',
         workers='\n\t'.join(task['workers']) if task['workers'] else 'No workers are assigned to this task.')
@@ -141,7 +141,7 @@ def parse_date(d):
     elif d == 'UNKNOWN':
         return d
     else:
-        return datetime.datetime.fromtimestamp(d)
+        return datetime.fromtimestamp(d)
 
 def fix_tasks_dict(tasks):
     for key, t in tasks.items():
