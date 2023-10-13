@@ -44,6 +44,10 @@ def task_matches(task, task_glob):
 class TaskFormatter(object):
     """Format a task for texutual display."""
     @staticmethod
+    def format_task_id(task_id):
+        return click.style(task_id, bold=True)
+
+    @staticmethod
     def format_status(status):
         tg = {'DONE': 'green',
               'PENDING': 'yellow',
@@ -52,21 +56,25 @@ class TaskFormatter(object):
               'DISABLED': 'white',
               'UNKNOWN': 'white'}
         return click.style(status, fg=tg[status]) if status in tg else status
+
     def format(self, task):
         raise NotImplementedError
 
+    def format_multiple(self, tasks):
+        return '\n'.join(self.format(task) for task in tasks if self.format(task) is not None)
+
 class ExtractingIdTaskFormatter(TaskFormatter):
     def format(self, task):
-        return task['id'] + '\n'
+        return task['id']
 
 class ExtractingParameterTaskFormatter(TaskFormatter):
     def __init__(self, field):
         self.field = field
     def format(self, task):
         if self.field in task['params']:
-            return str(task['params'][self.field]) + '\n'
+            return str(task['params'][self.field])
         else:
-            return ''
+            return None
 
 class InlineTaskFormatter(TaskFormatter):
     """Format a task for inline display."""
@@ -80,9 +88,9 @@ class InlineTaskFormatter(TaskFormatter):
         else:
             tr = task['last_updated']
 
-        return '{id:{id_width}}\t{status:{status_width}}\t{priority}\t{time}\n'.format(
-                id=click.style(task['id'], bold=True),
-                id_width=self.task_id_width,
+        return '{id:{id_width}}\t{status:{status_width}}\t{priority}\t{time}'.format(
+                id=self.format_task_id(task['id']),
+                id_width=self.task_id_width + len(self.format_task_id('')),
                 status=self.format_status(task['status']),
                 status_width=self.status_width,
                 priority=task['priority'],
@@ -92,8 +100,8 @@ class DetailedTaskFormatter(TaskFormatter):
     """Format a task for detailed multi-line display."""
     @staticmethod
     def format_dl(dl):
-        key_fill = max(len(click.style(k)) for k in dl)
-        return '\n\t'.join('{:{key_fill}}\t{}'.format(click.style(k, bold=True) + ':', v, key_fill=key_fill) for k, v in dl.items())
+        key_fill = max(len(k) for k in dl)
+        return '\n\t'.join('{:{key_fill}}\t{}'.format(k + ':', v, key_fill=key_fill) for k, v in dl.items())
 
     def format(self, task):
         return '''{id}
@@ -106,8 +114,8 @@ Time running:\t{time_running}
 Status message:\n\t{status_message}
 Parameters:\n\t{params}
 Resources:\n\t{resources}
-Workers:\n\t{workers}\n\n'''.format(
-        id=click.style(task['id'], bold=True),
+Workers:\n\t{workers}\n'''.format(
+        id=self.format_task_id(task['id']),
         display_name=task['display_name'],
         status=self.format_status(task['status']),
         priority=task['priority'],
@@ -119,12 +127,13 @@ Workers:\n\t{workers}\n\n'''.format(
         resources=self.format_dl(task['resources']) if task['resources'] else 'No resources were requested for the execution of this task.',
         workers='\n\t'.join(task['workers']) if task['workers'] else 'No workers are assigned to this task.')
 
-class TasksSummaryFormatter(object):
-    def format(self, tasks):
+class TasksSummaryFormatter(TaskFormatter):
+    def format_multiple(self, tasks):
+        key_fill = max(len(task['status']) for task in tasks) + len(self.format_status(''))
         count_by_status = Counter()
         for task in tasks:
-            count_by_status[task['status']] += 1
-        return '\n'.join('{}\t{}'.format(TaskFormatter.format_status(k), v) for k, v in count_by_status.items())
+            count_by_status[task['status']] += 5
+        return '\n'.join('{:{key_fill}} {}'.format(TaskFormatter.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
 
 def fix_tasks_dict(tasks):
     for key, t in tasks.items():
@@ -185,11 +194,10 @@ def list(task_glob, status, user, summary, detailed, extract_id, extract_paramet
         click.echo('No task match the provided query.', err=True)
         return
 
-    task_id_width = max(len(click.style(task['id'], bold=True)) for task in filtered_tasks)
+    task_id_width = max(len(task['id']) for task in filtered_tasks)
 
     if summary:
         formatter = TasksSummaryFormatter()
-        click.echo(formatter.format(filtered_tasks))
     else:
         if extract_id:
             formatter = ExtractingIdTaskFormatter()
@@ -200,7 +208,7 @@ def list(task_glob, status, user, summary, detailed, extract_id, extract_paramet
         else:
             formatter = InlineTaskFormatter(task_id_width=task_id_width)
 
-        click.echo_via_pager(formatter.format(t) for t in sorted(filtered_tasks, key=task_sort_key))
+    click.echo_via_pager(formatter.format_multiple(sorted(filtered_tasks, key=task_sort_key)))
 
 @main.command(context_settings=dict(ignore_unknown_options=True, help_option_names=[]))
 @click.argument('args', nargs=-1)
