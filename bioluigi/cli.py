@@ -232,8 +232,9 @@ def show(task_id):
 
 @main.command()
 @click.argument('task_id')
+@click.option('--forgive', is_flag=True)
 @click.option('--recursive', is_flag=True)
-def reenable(task_id, recursive):
+def reenable(task_id, forgive, recursive):
     """
     Reenable a disabled task.
     """
@@ -246,7 +247,9 @@ def reenable(task_id, recursive):
     for task_id in toreenable:
         try:
             rpc('re_enable_task', task_id=task_id)
-            click.echo('%s has been re-enabled.' % task_id)
+            if forgive:
+                rpc('forgive_failures', task_id=task_id)
+            click.echo('%s has been re-enabled%s.' % (task_id, ' and forgiven' if forgive else ''))
         except requests.exceptions.HTTPError as e:
             click.echo('Failed to re-enable {}: {}'.format(task_id, e), err=True)
             continue
