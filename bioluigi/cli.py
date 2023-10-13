@@ -80,11 +80,12 @@ class InlineTaskFormatter(TaskFormatter):
         else:
             tr = task['last_updated']
 
-        return '{id:{id_width}}\t{status:{status_width}}\t{time}\n'.format(
+        return '{id:{id_width}}\t{status:{status_width}}\t{priority}\t{time}\n'.format(
                 id=click.style(task['id'], bold=True),
                 id_width=self.task_id_width,
                 status=self.format_status(task['status']),
                 status_width=self.status_width,
+                priority=task['priority'],
                 time=tr)
 
 class DetailedTaskFormatter(TaskFormatter):
