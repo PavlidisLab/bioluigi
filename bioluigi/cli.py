@@ -240,6 +240,39 @@ def show(task_id):
 
 @main.command()
 @click.argument('task_id')
+@click.option('--status', multiple=True)
+@click.option('--summary', is_flag=True)
+@click.option('--detailed', is_flag=True)
+@click.option('--extract-id', is_flag=True)
+@click.option('--extract-parameter')
+def list_dependencies(task_id, status, summary, detailed, extract_id, extract_parameter):
+    """
+    List all the dependencies of the given task ID.
+    """
+    deps = rpc('dep_graph', task_id=task_id)
+    fix_tasks_dict(deps)
+    if status:
+        deps = {dep_id: deps[dep_id] for dep_id in deps if deps[dep_id]['status'] in status}
+    if summary:
+        formatter = TasksSummaryFormatter()
+    elif detailed:
+        # deps are missing a display name so we have to reconstruct it from the
+        # name and parameters
+        for dep_id in deps:
+            params = deps[dep_id]['params']
+            deps[dep_id]['display_name'] = deps[dep_id]['name'] + '(' + ', '.join(p + '=' + params[p] for p in sorted(params.keys())) + ')'
+        formatter = DetailedTaskFormatter()
+    elif extract_id:
+        formatter = ExtractingIdTaskFormatter()
+    elif extract_parameter is not None:
+        formatter = ExtractingParameterTaskFormatter(field=extract_parameter)
+    else:
+        dep_id_width = max(len(dep_id) for dep_id in deps)
+        formatter = InlineTaskFormatter(task_id_width=dep_id_width)
+    click.echo_via_pager(formatter.format_multiple(deps.values()))
+
+@main.command()
+@click.argument('task_id')
 @click.option('--recursive', is_flag=True, help='Reenable all the dependencies of a task.')
 @click.option('--forgive', is_flag=True, help='Forgive the task once it\'s been reenabled.')
 def reenable(task_id, recursive, forgive):
