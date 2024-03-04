@@ -6,6 +6,7 @@ import logging
 
 import luigi
 from luigi.task import getpaths, flatten, flatten_output
+from luigi.parameter import DictParameter
 
 logger = logging.getLogger('luigi-interface')
 
@@ -79,3 +80,9 @@ class RemoveTaskOutputOnFailureMixin(object):
                 except:
                     logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
         return super(RemoveTaskOutputOnFailureMixin, self).on_failure(err)
+
+class TaskWithMetadataMixin(object):
+    """
+    Mixin that adds an insignificant metadata parameter to a task.
+    """
+    metadata = DictParameter(default={}, positional=False, significant=False)

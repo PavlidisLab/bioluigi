@@ -9,10 +9,11 @@ from luigi.task import flatten
 
 from ..scheduled_external_program import ScheduledExternalProgramTask
 from ..config import bioluigi
+from .utils import TaskWithMetadataMixin
 
 cfg = bioluigi()
 
-class Prefetch(ScheduledExternalProgramTask):
+class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     """
     Prefetch a SRA run archive.
 
@@ -47,7 +48,7 @@ class Prefetch(ScheduledExternalProgramTask):
     def output(self):
         return luigi.LocalTarget(self.output_file)
 
-class FastqDump(ScheduledExternalProgramTask):
+class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     """
     Extract FASTQs from a SRA archive
 
