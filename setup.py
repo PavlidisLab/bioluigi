@@ -25,4 +25,4 @@ setup(name='bioluigi',
       entry_points={
           'console_scripts': [
               'bioluigi = bioluigi.cli:main']},
-          install_requires=['click', luigi_dep, 'requests'])
+      install_requires=['click', luigi_dep, 'python-daemon<3.0.0', 'requests'])
