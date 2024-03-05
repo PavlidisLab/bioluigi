@@ -36,14 +36,6 @@ bioluigi.scheduled\_external\_program module
    :undoc-members:
    :show-inheritance:
 
-bioluigi.targets module
------------------------
-
-.. automodule:: bioluigi.targets
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
