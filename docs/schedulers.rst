@@ -39,13 +39,14 @@ Slurm
 -----
 
 Unlike the local scheduler, no resource allocation is performed via Luigi
-resource mechanism. Instead, a single ``slurm_jobs`` resource is consumed to
-control how many jobs Luigi can queue.
+resource mechanism. Instead, two resources are consumed: ``slurm_jobs`` and
+``slurm_cpus`` to respectively control how many jobs and CPUs can be allocated.
 
 .. code-block:: ini
 
    [bioluigi]
    slurm_jobs=32
+   slurm_cpus=256
 
 .. note::
 
