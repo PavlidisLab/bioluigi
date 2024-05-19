@@ -90,7 +90,7 @@ class InlineTaskFormatter(TaskFormatter):
 
         return '{id:{id_width}}\t{status:{status_width}}\t{priority}\t{time}'.format(
                 id=self.format_task_id(task['id']),
-                id_width=self.task_id_width + len(self.format_task_id('')),
+                id_width=self.task_id_width + len(self.format_task_id('foo')) - 3,
                 status=self.format_status(task['status']),
                 status_width=self.status_width,
                 priority=task['priority'],
@@ -129,11 +129,11 @@ Workers:\n\t{workers}\n'''.format(
 
 class TasksSummaryFormatter(TaskFormatter):
     def format_multiple(self, tasks):
-        key_fill = max(len(task['status']) for task in tasks) + len(self.format_status(''))
+        key_fill = max(len(self.format_status(task['status'])) for task in tasks)
         count_by_status = Counter()
         for task in tasks:
             count_by_status[task['status']] += 5
-        return '\n'.join('{:{key_fill}} {}'.format(TaskFormatter.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
+        return '\n'.join('{:{key_fill}}\t{}'.format(self.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
 
 def parse_date(d):
     if d is None:
@@ -165,7 +165,7 @@ def main():
 @click.option('--no-limit', is_flag=True, help='Do not limit the number of tasks retrieved.')
 def list(task_glob, status, user, summary, detailed, extract_id, extract_parameter, no_limit):
     """
-    List all tasks that match the given pattern and filters.
+    List all tasks that match the given glob pattern and filters.
     """
     search = task_glob.replace('*', '') if task_glob else None
 
