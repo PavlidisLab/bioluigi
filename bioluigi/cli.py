@@ -258,9 +258,15 @@ def list_dependencies(task_id, status, summary, detailed, extract_id, extract_pa
     List all the dependencies of the given task ID.
     """
     deps = rpc('dep_graph', task_id=task_id)
+    if not deps:
+        click.echo(f'No dependencies for task {task_id}.')
+        return
     fix_tasks_dict(deps)
     if status:
         deps = {dep_id: deps[dep_id] for dep_id in deps if deps[dep_id]['status'] in status}
+        if not deps:
+            click.echo(f'No dependencies for task {task_id} with status: {", ".join(status)}.')
+            return
     if summary:
         formatter = TasksSummaryFormatter()
     elif detailed:
