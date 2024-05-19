@@ -329,3 +329,9 @@ def forgive(task_id, recursive):
         except requests.exceptions.HTTPError as e:
             click.echo('Failed to forgive {}: {}'.format(task_id, e), err=True)
             continue
+
+@main.command()
+@click.argument('task_id')
+@click.argument('priority')
+def set_priority(task_id, priority):
+    rpc('add_task', task_id=task_id, priority=priority)
