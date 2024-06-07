@@ -15,6 +15,7 @@ class GenerateReport(ScheduledExternalProgramTask):
     output_dir = luigi.Parameter()
 
     sample_names = luigi.OptionalParameter(default=None, positional=False)
+    replace_names = luigi.OptionalParameter(default=None, positional=False)
 
     title = luigi.OptionalParameter(default=None, positional=False)
     comment = luigi.OptionalParameter(default=None, positional=False)
@@ -25,6 +26,8 @@ class GenerateReport(ScheduledExternalProgramTask):
         args = [cfg.multiqc_bin, '--outdir', self.output_dir]
         if self.sample_names:
             args.extend(['--sample-names', self.sample_names])
+        if self.replace_names:
+            args.extend(['--replace-names', self.replace_names])
         if self.title is not None:
             args.extend(['--title', self.title])
         if self.comment is not None:
