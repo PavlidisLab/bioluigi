@@ -31,7 +31,7 @@ class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     @property
     def resources(self):
-        r = super(Prefetch, self).resources
+        r = super().resources
         r.update({'prefetch_jobs': 1})
         return r
 
@@ -68,12 +68,12 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     @property
     def resources(self):
-        r = super(FastqDump, self).resources
+        r = super().resources
         r.update({'fastq_dump_jobs': 1})
         return r
 
     def __init__(self, *kwargs, **kwds):
-        super(FastqDump, self).__init__(*kwargs, **kwds)
+        super().__init__(*kwargs, **kwds)
         self.temp_output_dir = None
 
     def program_args(self):
@@ -100,7 +100,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         base, tail = split(self.output_dir)
         self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
         try:
-            super(FastqDump, self).run()
+            super().run()
             # move every output to the final directory
             for out in self.output():
                 tmp_out_path = join(self.temp_output_dir, basename(out.path))

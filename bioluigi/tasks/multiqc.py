@@ -39,7 +39,7 @@ class GenerateReport(ScheduledExternalProgramTask):
 
     def run(self):
         try:
-            return super(GenerateReport, self).run()
+            return super().run()
         finally:
             self._did_run = True
 
@@ -50,4 +50,4 @@ class GenerateReport(ScheduledExternalProgramTask):
         # since we're forcing the task, we first ignore any existing completion state
         if self.force and not hasattr(self, '_did_run'):
             return False
-        return super(GenerateReport, self).complete()
+        return super().complete()

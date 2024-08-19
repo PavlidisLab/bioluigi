@@ -61,7 +61,7 @@ class TrimReads(CutadaptTask):
     output_file = luigi.Parameter()
 
     def program_args(self):
-        args = super(TrimReads, self).program_args()
+        args = super().program_args()
         args.extend(['-o', self.output_file, self.input_file])
         return args
 
@@ -78,7 +78,7 @@ class TrimPairedReads(CutadaptTask):
     reverse_adapter_5prime = luigi.OptionalParameter(default='', positional=False)
 
     def program_args(self):
-        args = super(TrimPairedReads, self).program_args()
+        args = super().program_args()
         if self.reverse_adapter_3prime:
             args.extend(['-A', self.reverse_adapter_3prime])
         if self.reverse_adapter_5prime:

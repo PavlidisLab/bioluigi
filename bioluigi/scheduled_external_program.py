@@ -29,7 +29,7 @@ def register_scheduler(blurb):
         return cls
     return wrapper
 
-class Scheduler(object):
+class Scheduler:
     """
     :param blurb: Short name by with the scheduler is referred to
     or if it should be done through Luigi's resource management system.
@@ -86,7 +86,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
 
     def __init__(self, *kwargs, **kwds):
-        super(ScheduledExternalProgramTask, self).__init__(*kwargs, **kwds)
+        super().__init__(*kwargs, **kwds)
         try:
             if self.scheduler != 'local':
                 self._scheduler = _schedulers[self.scheduler]
@@ -103,6 +103,6 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
 
     def run(self):
         if self.scheduler == 'local':
-            return super(ScheduledExternalProgramTask, self).run()
+            return super().run()
         else:
             return self._scheduler.run_task(self)

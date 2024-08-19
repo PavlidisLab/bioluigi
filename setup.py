@@ -2,12 +2,6 @@ from setuptools import setup, find_packages
 import sys
 from os.path import join, dirname
 
-# Luigi 3+ does not support Python 2
-if sys.version_info.major == 2:
-    luigi_dep = 'luigi~=2.8'
-else:
-    luigi_dep = 'luigi'
-
 with open(join(dirname(__file__), 'README.md')) as f:
     long_description = f.read()
 
@@ -25,4 +19,4 @@ setup(name='bioluigi',
       entry_points={
           'console_scripts': [
               'bioluigi = bioluigi.cli:main']},
-      install_requires=['click', luigi_dep, 'python-daemon<3.0.0', 'requests'])
+      install_requires=['click', 'luigi', 'python-daemon<3.0.0', 'requests'])

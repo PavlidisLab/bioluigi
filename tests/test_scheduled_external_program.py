@@ -9,12 +9,12 @@ class MyTask(ScheduledExternalProgramTask):
     cpus = 4
     unique_id = luigi.Parameter(visibility=luigi.parameter.ParameterVisibility.PRIVATE)
     def __init__(self, *args, **kwds):
-        super(MyTask, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self._completed = False
     def program_args(self):
         return ['true']
     def run(self):
-        ret = super(MyTask, self).run()
+        ret = super().run()
         self._completed = True
         return ret;
     def complete(self):

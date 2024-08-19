@@ -28,14 +28,14 @@ class DynamicWrapperTask(luigi.Task):
             logger.exception('%s failed at run() step; the exception will not be raised because Luigi is still building the graph.', repr(self))
             return False
 
-class TaskWithOutputMixin(object):
+class TaskWithOutputMixin:
     """
     Extends a luigi.WrapperTask to forward its dependencies as output.
     """
     def output(self):
         return getpaths(self.requires())
 
-class DynamicTaskWithOutputMixin(object):
+class DynamicTaskWithOutputMixin:
     """
     Extends a task to forward its dynamic dependencies as output.
     """
@@ -55,7 +55,7 @@ class DynamicTaskWithOutputMixin(object):
 
         return getpaths(tasks)
 
-class CreateTaskOutputDirectoriesBeforeRunMixin(object):
+class CreateTaskOutputDirectoriesBeforeRunMixin:
     """
     Ensures that output directories exist before running the task.
     """
@@ -63,9 +63,9 @@ class CreateTaskOutputDirectoriesBeforeRunMixin(object):
         for out in flatten_output(self):
             if hasattr(out, 'makedirs'):
                 out.makedirs()
-        return super(CreateTaskOutputDirectoriesBeforeRunMixin, self).run()
+        return super().run()
 
-class RemoveTaskOutputOnFailureMixin(object):
+class RemoveTaskOutputOnFailureMixin:
     """
     Remove a task outputs on failure.
 
@@ -79,9 +79,9 @@ class RemoveTaskOutputOnFailureMixin(object):
                     out.remove()
                 except:
                     logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
-        return super(RemoveTaskOutputOnFailureMixin, self).on_failure(err)
+        return super().on_failure(err)
 
-class TaskWithMetadataMixin(object):
+class TaskWithMetadataMixin:
     """
     Mixin that adds an insignificant metadata parameter to a task.
     """

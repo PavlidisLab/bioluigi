@@ -41,7 +41,7 @@ def task_matches(task, task_glob):
     """Match a task against a glob pattern."""
     return task_glob is None or fnmatch(task['name'], task_glob) or fnmatch(task['display_name'], task_glob)
 
-class TaskFormatter(object):
+class TaskFormatter:
     """Format a task for texutual display."""
     @staticmethod
     def format_task_id(task_id):
