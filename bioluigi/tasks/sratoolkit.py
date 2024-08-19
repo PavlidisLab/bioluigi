@@ -74,6 +74,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     def __init__(self, *kwargs, **kwds):
         super(FastqDump, self).__init__(*kwargs, **kwds)
+        self.temp_output_dir = None
 
     def program_args(self):
         args = [cfg.fastqdump_bin,

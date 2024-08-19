@@ -13,7 +13,7 @@ def test_fastq_dump():
     assert '-M' in args
     assert 18 in args
     assert args[-3] == '--outdir'
-    assert args[-2].startswith('outdir-tmp')
+    assert args[-2] == 'outdir'
     assert args[-1] == 'srr_accession'
     assert 'fastq_dump_jobs' in fastq_dump_task.resources
     assert fastq_dump_task.resources['fastq_dump_jobs'] == 1
