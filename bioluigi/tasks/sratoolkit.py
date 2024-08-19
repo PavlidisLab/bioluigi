@@ -74,8 +74,6 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     def __init__(self, *kwargs, **kwds):
         super(FastqDump, self).__init__(*kwargs, **kwds)
-        base, tail = split(self.output_dir)
-        self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
 
     def program_args(self):
         args = [cfg.fastqdump_bin,
@@ -89,13 +87,17 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         if self.minimum_read_length > 0:
             args.extend(['-M', self.minimum_read_length])
 
-        args.extend(['--outdir', self.temp_output_dir])
+        # temp_output_dir is only set within a run() execution, so this is a
+        # graceful fallback
+        args.extend(['--outdir', self.temp_output_dir if self.temp_output_dir else self.output_dir])
 
         args.append(self.input_file)
 
         return args
 
     def run(self):
+        base, tail = split(self.output_dir)
+        self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
         try:
             super(FastqDump, self).run()
             # move every output to the final directory
@@ -106,6 +108,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
                     os.replace(tmp_out_path, out.path)
         finally:
             shutil.rmtree(self.temp_output_dir)
+            self.temp_output_dir = None
 
     def output(self):
         sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
