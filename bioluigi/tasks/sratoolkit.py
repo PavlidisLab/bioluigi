@@ -1,15 +1,13 @@
-import datetime
 import os
+import shutil
 from os.path import join, split, basename
 from tempfile import mkdtemp
-import shutil
 
 import luigi
-from luigi.task import flatten
 
-from ..scheduled_external_program import ScheduledExternalProgramTask
-from ..config import bioluigi
 from .utils import TaskWithMetadataMixin
+from ..config import bioluigi
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
 
@@ -26,8 +24,10 @@ class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     srr_accession = luigi.Parameter()
     output_file = luigi.Parameter()
-    max_size = luigi.IntParameter(default=20, positional=False, significant=False, description='Maximum download size in gigabytes')
-    extra_args = luigi.ListParameter(default=[], positional=False, description='Extra arguments to pass to prefetch which can be used to setup Aspera')
+    max_size = luigi.IntParameter(default=20, positional=False, significant=False,
+                                  description='Maximum download size in gigabytes')
+    extra_args = luigi.ListParameter(default=[], positional=False,
+                                     description='Extra arguments to pass to prefetch which can be used to setup Aspera')
 
     @property
     def resources(self):
@@ -37,7 +37,7 @@ class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
     def program_args(self):
         args = [cfg.prefetch_bin,
-                '--max-size',    '{}G'.format(self.max_size),
+                '--max-size', '{}G'.format(self.max_size),
                 '--output-file', self.output().path]
 
         args.extend(self.extra_args)
@@ -64,7 +64,8 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     input_file = luigi.Parameter(description='A file path or a SRA archive, or a SRA run accession')
     output_dir = luigi.Parameter(description='Destination directory for the extracted FASTQs')
 
-    minimum_read_length = luigi.IntParameter(default=0, positional=False, description='Minimum read length to be extracted from the archive')
+    minimum_read_length = luigi.IntParameter(default=0, positional=False,
+                                             description='Minimum read length to be extracted from the archive')
 
     @property
     def resources(self):

@@ -1,5 +1,4 @@
 import luigi
-from os.path import join
 
 from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
@@ -35,15 +34,15 @@ class Annotate(ScheduledExternalProgramTask):
 
     def program_args(self):
         args = [cfg.vep_bin,
-                '-i',                self.vcf_file,
-                '--format',          'vcf',
-                '--fork',            self.cpus,
-                '--buffer_size',     self.buffer_size,
-                '--species',         self.species,
-                '--assembly',        self.assembly,
+                '-i', self.vcf_file,
+                '--format', 'vcf',
+                '--fork', self.cpus,
+                '--buffer_size', self.buffer_size,
+                '--species', self.species,
+                '--assembly', self.assembly,
                 f'--{self.output_format}',
                 '--compress_output', self.compress_output,
-                '--output_file',     self.output().path]
+                '--output_file', self.output().path]
 
         if self.cache:
             args.append('--cache')

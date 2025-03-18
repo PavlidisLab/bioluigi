@@ -1,4 +1,3 @@
-import datetime
 from os.path import join
 
 import luigi

@@ -16,13 +16,14 @@ class RsemReference(luigi.Target):
     `{reference_name}.ti`, `{reference_name}.seq` and `{reference_name}.chrlist`
     files.
     """
+
     def __init__(self, reference_name):
         self.reference_name = reference_name
 
     def exists(self):
         exts = ['grp', 'ti', 'seq', 'chrlist']
         return all(exists('{}.{}'.format(self.reference_name, ext))
-                for ext in exts)
+                   for ext in exts)
 
 class PrepareReference(ScheduledExternalProgramTask):
     """
@@ -120,4 +121,3 @@ class CalculateExpression(ScheduledExternalProgramTask):
     def output(self):
         return [luigi.LocalTarget('{}.isoforms.results'.format(self.sample_name)),
                 luigi.LocalTarget('{}.genes.results'.format(self.sample_name))]
-

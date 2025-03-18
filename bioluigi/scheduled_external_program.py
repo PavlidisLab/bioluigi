@@ -7,12 +7,12 @@ resource consumptions such as the number of CPU and the amount of memory
 required to execute the task.
 """
 
-import luigi
-from luigi.contrib.external_program import ExternalProgramTask, ExternalProgramRunError, ExternalProgramRunContext
-from subprocess import Popen, PIPE, check_call
-import os
 import datetime
 import logging
+from subprocess import Popen, PIPE
+
+import luigi
+from luigi.contrib.external_program import ExternalProgramTask, ExternalProgramRunError, ExternalProgramRunContext
 
 from .config import bioluigi
 
@@ -24,9 +24,11 @@ _schedulers = {}
 
 def register_scheduler(blurb):
     global _schedulers
+
     def wrapper(cls):
         _schedulers[blurb] = cls
         return cls
+
     return wrapper
 
 class Scheduler:
@@ -44,6 +46,7 @@ class SlurmScheduler(Scheduler):
     """
     Scheduler based on Slurm https://slurm.schedmd.com/
     """
+
     @classmethod
     def run_task(self, task):
         secs = int(task.walltime.total_seconds())
@@ -51,7 +54,8 @@ class SlurmScheduler(Scheduler):
         srun_args.extend([
             '--verbose',
             '--job-name', repr(task),
-            '--time', '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
+            '--time',
+            '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
             '--cpus-per-task', str(task.cpus)])
         if task.scheduler_partition:
@@ -77,13 +81,20 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.
     """
-    scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [blurb for blurb in _schedulers], positional=False, significant=False, description='Scheduler to use for running the task')
-    scheduler_partition = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False, significant=False, description='Scheduler partition (or queue) to use if supported')
-    scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False, description='Extra arguments to pass to the scheduler')
+    scheduler = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [blurb for blurb in _schedulers],
+                                      positional=False, significant=False,
+                                      description='Scheduler to use for running the task')
+    scheduler_partition = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False, significant=False,
+                                                  description='Scheduler partition (or queue) to use if supported')
+    scheduler_extra_args = luigi.ListParameter(default=cfg.scheduler_extra_args, positional=False, significant=False,
+                                               description='Extra arguments to pass to the scheduler')
 
-    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(), positional=False, significant=False, description='Amout of time to allocate for the task, default value of zero implies unlimited time')
-    cpus = luigi.IntParameter(default=1, positional=False, significant=False, description='Number of CPUs to allocate for the task')
-    memory = luigi.FloatParameter(default=1, positional=False, significant=False, description='Amount of memory (in gigabyte) to allocate for the task')
+    walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(), positional=False, significant=False,
+                                        description='Amout of time to allocate for the task, default value of zero implies unlimited time')
+    cpus = luigi.IntParameter(default=1, positional=False, significant=False,
+                              description='Number of CPUs to allocate for the task')
+    memory = luigi.FloatParameter(default=1, positional=False, significant=False,
+                                  description='Amount of memory (in gigabyte) to allocate for the task')
 
     def __init__(self, *kwargs, **kwds):
         super().__init__(*kwargs, **kwds)

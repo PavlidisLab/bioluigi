@@ -5,8 +5,8 @@ Collection of utilities and mixins for tasks
 import logging
 
 import luigi
-from luigi.task import getpaths, flatten, flatten_output
 from luigi.parameter import DictParameter
+from luigi.task import getpaths, flatten, flatten_output
 
 logger = logging.getLogger('luigi-interface')
 
@@ -15,6 +15,7 @@ class DynamicWrapperTask(luigi.Task):
     Similar to luigi.task.WrapperTask but for dynamic dependencies yielded in
     the body of the run() method.
     """
+
     def complete(self):
         # ensure that static dependencies are met
         if not all(req.complete() for req in flatten(self.requires())):
@@ -25,13 +26,16 @@ class DynamicWrapperTask(luigi.Task):
             return all(req.complete() for chunk in self.run()
                        for req in flatten(chunk))
         except:
-            logger.exception('%s failed at run() step; the exception will not be raised because Luigi is still building the graph.', repr(self))
+            logger.exception(
+                '%s failed at run() step; the exception will not be raised because Luigi is still building the graph.',
+                repr(self))
             return False
 
 class TaskWithOutputMixin:
     """
     Extends a luigi.WrapperTask to forward its dependencies as output.
     """
+
     def output(self):
         return getpaths(self.requires())
 
@@ -39,13 +43,16 @@ class DynamicTaskWithOutputMixin:
     """
     Extends a task to forward its dynamic dependencies as output.
     """
+
     def output(self):
         tasks = []
         if all(req.complete() for req in flatten(self.requires())):
             try:
                 tasks = list(self.run())
             except:
-                logger.exception('%s failed at run() step; the exception will not be raised because Luigi is still building the graph.', repr(self))
+                logger.exception(
+                    '%s failed at run() step; the exception will not be raised because Luigi is still building the graph.',
+                    repr(self))
 
         # FIXME: conserve task structure: the generator actually create an
         # implicit array level even if a single task is yielded.
@@ -59,6 +66,7 @@ class CreateTaskOutputDirectoriesBeforeRunMixin:
     """
     Ensures that output directories exist before running the task.
     """
+
     def run(self):
         for out in flatten_output(self):
             if hasattr(out, 'makedirs'):
@@ -71,6 +79,7 @@ class RemoveTaskOutputOnFailureMixin:
 
     This only applies for output that have a defined 'remove' method.
     """
+
     def on_failure(self, err):
         logger.info('Removing task output of %s due to failure.', repr(self))
         for out in flatten_output(self):

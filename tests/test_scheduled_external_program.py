@@ -1,22 +1,27 @@
-import os
+from shutil import which
+
 import luigi
 import luigi.parameter
-from bioluigi.scheduled_external_program import ScheduledExternalProgramTask, Scheduler, SlurmScheduler
-from distutils.spawn import find_executable
 import pytest
+
+from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
 
 class MyTask(ScheduledExternalProgramTask):
     cpus = 4
     unique_id = luigi.Parameter(visibility=luigi.parameter.ParameterVisibility.PRIVATE)
+
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
         self._completed = False
+
     def program_args(self):
         return ['true']
+
     def run(self):
         ret = super().run()
         self._completed = True
         return ret;
+
     def complete(self):
         return self._completed
 
@@ -36,7 +41,7 @@ def test_local_scheduler():
     assert task.complete()
 
 def test_slurm_scheduler():
-    if find_executable('srun') is None:
+    if which('srun') is None:
         pytest.skip('srun is needed to run Slurm tests.')
     task = MyTask("3", scheduler='slurm')
     assert 'slurm_jobs' in task.resources

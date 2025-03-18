@@ -1,12 +1,10 @@
-import datetime
 import logging
 
 import luigi
-from luigi.task import flatten_output
 
-from ..scheduled_external_program import ScheduledExternalProgramTask
-from ..config import bioluigi
 from .utils import RemoveTaskOutputOnFailureMixin
+from ..config import bioluigi
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
 logger = logging.getLogger('luigi-interface')
 
@@ -57,7 +55,7 @@ class TrimReads(CutadaptTask):
     For consistency with TrimPairedReads, this task output a list with a single
     target corresponding to trimmed FASTQ.
     """
-    input_file =  luigi.Parameter()
+    input_file = luigi.Parameter()
     output_file = luigi.Parameter()
 
     def program_args(self):

@@ -1,8 +1,9 @@
-import datetime
 from os.path import join, basename, splitext
+
 import luigi
-from ..scheduled_external_program import ScheduledExternalProgramTask
+
 from ..config import bioluigi
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
 

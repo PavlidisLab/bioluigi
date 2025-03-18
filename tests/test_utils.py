@@ -1,6 +1,3 @@
-import os
-
-import luigi
 from bioluigi.tasks.utils import *
 
 def test_task_with_output_mixin():
@@ -34,8 +31,10 @@ def test_remove_task_output_on_failure():
         def run(self):
             with open(self.output().path, 'w'):
                 raise RuntimeError('Error while creating output!')
+
         def output(self):
             return luigi.LocalTarget('this')
+
     task = Tsk()
     luigi.build([Tsk()], local_scheduler=True)
     assert not task.output().exists()

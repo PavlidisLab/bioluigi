@@ -1,7 +1,9 @@
-import luigi
-from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
-import bioluigi.config
 import urllib
+
+import luigi
+
+import bioluigi.config
+from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi.config.bioluigi()
 

@@ -4,8 +4,8 @@ Command-line interface for interacting with Luigi scheduler.
 
 import json
 import sys
-from datetime import datetime
 from collections import Counter
+from datetime import datetime
 from fnmatch import fnmatch
 from os.path import join
 
@@ -19,8 +19,10 @@ luigi_cfg = core()
 class TooManyTasksError(Exception):
     def __init__(self, num_tasks):
         self.num_tasks = num_tasks
+
     def __str__(self):
-        return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(self.num_tasks if self.num_tasks else 'an unknown amount of')
+        return 'That request would return {} tasks; try filtering by status, glob query or set the --no-limit flag.'.format(
+            self.num_tasks if self.num_tasks else 'an unknown amount of')
 
 def rpc(method, **kwargs):
     scheduler_url = luigi_cfg.scheduler_url if luigi_cfg.scheduler_url else f'http://{luigi_cfg.scheduler_host}:{luigi_cfg.scheduler_port}/'
@@ -43,6 +45,7 @@ def task_matches(task, task_glob):
 
 class TaskFormatter:
     """Format a task for texutual display."""
+
     @staticmethod
     def format_task_id(task_id):
         return click.style(task_id, bold=True)
@@ -70,6 +73,7 @@ class ExtractingIdTaskFormatter(TaskFormatter):
 class ExtractingParameterTaskFormatter(TaskFormatter):
     def __init__(self, field):
         self.field = field
+
     def format(self, task):
         if self.field in task['params']:
             return str(task['params'][self.field])
@@ -78,6 +82,7 @@ class ExtractingParameterTaskFormatter(TaskFormatter):
 
 class InlineTaskFormatter(TaskFormatter):
     """Format a task for inline display."""
+
     def __init__(self, task_id_width, status_width=17):
         self.task_id_width = task_id_width
         self.status_width = status_width
@@ -89,15 +94,16 @@ class InlineTaskFormatter(TaskFormatter):
             tr = task['last_updated']
 
         return '{id:{id_width}}\t{status:{status_width}}\t{priority}\t{time}'.format(
-                id=self.format_task_id(task['id']),
-                id_width=self.task_id_width + len(self.format_task_id('foo')) - 3,
-                status=self.format_status(task['status']),
-                status_width=self.status_width,
-                priority=task['priority'],
-                time=tr)
+            id=self.format_task_id(task['id']),
+            id_width=self.task_id_width + len(self.format_task_id('foo')) - 3,
+            status=self.format_status(task['status']),
+            status_width=self.status_width,
+            priority=task['priority'],
+            time=tr)
 
 class DetailedTaskFormatter(TaskFormatter):
     """Format a task for detailed multi-line display."""
+
     @staticmethod
     def format_dl(dl):
         key_fill = max(len(k) for k in dl)
@@ -115,17 +121,19 @@ Status message:\n\t{status_message}
 Parameters:\n\t{params}
 Resources:\n\t{resources}
 Workers:\n\t{workers}\n'''.format(
-        id=self.format_task_id(task['id']),
-        display_name=task['display_name'],
-        status=self.format_status(task['status']),
-        priority=task['priority'],
-        status_message=task['status_message'] if task['status_message'] else 'No status message were received for this task.',
-        start_time=task['start_time'],
-        last_updated=task['last_updated'],
-        time_running=(datetime.now() - task['time_running']) if task['status'] == 'RUNNING' else '',
-        params=self.format_dl(task['params']) if task['params'] else 'No parameters were set.',
-        resources=self.format_dl(task['resources']) if task['resources'] else 'No resources were requested for the execution of this task.',
-        workers='\n\t'.join(task['workers']) if task['workers'] else 'No workers are assigned to this task.')
+            id=self.format_task_id(task['id']),
+            display_name=task['display_name'],
+            status=self.format_status(task['status']),
+            priority=task['priority'],
+            status_message=task['status_message'] if task[
+                'status_message'] else 'No status message were received for this task.',
+            start_time=task['start_time'],
+            last_updated=task['last_updated'],
+            time_running=(datetime.now() - task['time_running']) if task['status'] == 'RUNNING' else '',
+            params=self.format_dl(task['params']) if task['params'] else 'No parameters were set.',
+            resources=self.format_dl(task['resources']) if task[
+                'resources'] else 'No resources were requested for the execution of this task.',
+            workers='\n\t'.join(task['workers']) if task['workers'] else 'No workers are assigned to this task.')
 
 class TasksSummaryFormatter(TaskFormatter):
     def format_multiple(self, tasks):
@@ -133,7 +141,8 @@ class TasksSummaryFormatter(TaskFormatter):
         count_by_status = Counter()
         for task in tasks:
             count_by_status[task['status']] += 5
-        return '\n'.join('{:{key_fill}}\t{}'.format(self.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
+        return '\n'.join(
+            '{:{key_fill}}\t{}'.format(self.format_status(k), v, key_fill=key_fill) for k, v in count_by_status.items())
 
 def parse_date(d):
     if d is None:
@@ -274,7 +283,8 @@ def list_dependencies(task_id, status, summary, detailed, extract_id, extract_pa
         # name and parameters
         for dep_id in deps:
             params = deps[dep_id]['params']
-            deps[dep_id]['display_name'] = deps[dep_id]['name'] + '(' + ', '.join(p + '=' + params[p] for p in sorted(params.keys())) + ')'
+            deps[dep_id]['display_name'] = deps[dep_id]['name'] + '(' + ', '.join(
+                p + '=' + params[p] for p in sorted(params.keys())) + ')'
         formatter = DetailedTaskFormatter()
     elif extract_id:
         formatter = ExtractingIdTaskFormatter()

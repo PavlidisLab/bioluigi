@@ -1,6 +1,5 @@
 import luigi
 from luigi.contrib.external_program import ExternalProgramTask
-import os
 
 class IndexBam(ExternalProgramTask):
     bam_file = luigi.Parameter()

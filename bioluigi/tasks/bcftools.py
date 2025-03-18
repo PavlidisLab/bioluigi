@@ -1,8 +1,9 @@
-import luigi
 from os.path import join
 
-from ..scheduled_external_program import ScheduledExternalProgramTask
+import luigi
+
 from ..config import bioluigi
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
 
@@ -73,8 +74,8 @@ class View(BcftoolsTask):
 
     def subcommand_args(self):
         return ['view',
-            '--output-type', self.output_format,
-            '--output-file', self.output_file]
+                '--output-type', self.output_format,
+                '--output-file', self.output_file]
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
@@ -131,6 +132,7 @@ class Index(BcftoolsTask):
     """
     Use tabix to create a tabular index for a VCF.
     """
+
     def subcommand_args(self):
         return ['index', '--tbi']
 
