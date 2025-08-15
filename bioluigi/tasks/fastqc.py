@@ -13,6 +13,9 @@ class GenerateReport(ScheduledExternalProgramTask):
     input_file = luigi.Parameter()
     output_dir = luigi.Parameter()
 
+    temp_dir = luigi.OptionalParameter(positional=False, significant=False,
+                                       description='Temporary directory to use for FastQC intermediary files.')
+
     @staticmethod
     def gen_report_basename(fastq_path):
         sample_name, ext = splitext(basename(fastq_path))
@@ -21,9 +24,12 @@ class GenerateReport(ScheduledExternalProgramTask):
         return '{}_fastqc.html'.format(sample_name)
 
     def program_args(self):
-        return [cfg.fastqc_bin,
-                '--outdir', self.output_dir,
-                self.input_file]
+        args = [cfg.fastqc_bin,
+                '--outdir', self.output_dir]
+        if self.temp_dir:
+            args.extend(['--dir', self.temp_dir])
+        args.append(self.input_file)
+        return args
 
     def output(self):
         return luigi.LocalTarget(join(self.output_dir, self.gen_report_basename(self.input_file)))
