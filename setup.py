@@ -1,12 +1,12 @@
-from setuptools import setup, find_packages
-import sys
 from os.path import join, dirname
+
+from setuptools import setup, find_packages
 
 with open(join(dirname(__file__), 'README.md')) as f:
     long_description = f.read()
 
 setup(name='bioluigi',
-      version='0.2.1',
+      version='0.2.2',
       description='Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines',
       long_description=long_description,
       long_description_content_type='text/markdown',

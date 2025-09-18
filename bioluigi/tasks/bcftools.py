@@ -1,4 +1,5 @@
 from os.path import join
+from typing import Optional
 
 import luigi
 
@@ -10,15 +11,15 @@ cfg = bioluigi()
 class BcftoolsTask(ScheduledExternalProgramTask):
     task_namespace = 'bcftools'
 
-    input_file = luigi.Parameter()
+    input_file: str = luigi.Parameter()
 
-    include = luigi.OptionalParameter(positional=False, default=None)
-    exclude = luigi.OptionalParameter(positional=False, default=None)
-    regions = luigi.ListParameter(default=[], positional=False)
-    regions_file = luigi.OptionalParameter(positional=False, default=None)
-    samples = luigi.ListParameter(default=[], positional=False)
-    samples_file = luigi.OptionalParameter(default=None, positional=False)
-    apply_filters = luigi.OptionalParameter(positional=False, default=None)
+    include: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    exclude: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    regions: list[str] = luigi.ListParameter(default=[], positional=False)
+    regions_file: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    samples: list[str] = luigi.ListParameter(default=[], positional=False)
+    samples_file: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    apply_filters: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
     # FIXME: the '--threads' flag does not seem to work
 
@@ -84,15 +85,15 @@ class Annotate(BcftoolsTask):
     """
     Annotate a VCF using bcftools annotate.
     """
-    output_file = luigi.Parameter()
-    output_format = luigi.Parameter(positional=False, default='z')
+    output_file: str = luigi.Parameter()
+    output_format: str = luigi.Parameter(positional=False, default='z')
 
     # options given an annotation file
-    annotations_file = luigi.OptionalParameter(positional=False, default=None)
+    annotations_file: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
-    columns = luigi.ListParameter(positional=False, default=[])
+    columns: list[str] = luigi.ListParameter(positional=False, default=[])
 
-    rename_chrs = luigi.OptionalParameter(positional=False, default=None)
+    rename_chrs: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
     def subcommand_args(self):
         args = ['annotate']
@@ -140,8 +141,8 @@ class Index(BcftoolsTask):
         return luigi.LocalTarget(self.input_file + '.tbi')
 
 class Intersect(BcftoolsTask):
-    input_file2 = luigi.Parameter()
-    output_dir = luigi.Parameter()
+    input_file2: str = luigi.Parameter()
+    output_dir: str = luigi.Parameter()
 
     def subcommand_args(self):
         return ['isec', '-p', self.output_dir]
@@ -158,11 +159,11 @@ class Merge(BcftoolsTask):
     """
     input_file = luigi.ListParameter()
 
-    filter_logic = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
-    info_rules = luigi.ListParameter(default=[], positional=False)
+    filter_logic: str = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
+    info_rules: list[str] = luigi.ListParameter(default=[], positional=False)
 
-    output_file = luigi.Parameter()
-    output_format = luigi.Parameter(positional=False, default='z')
+    output_file: str = luigi.Parameter()
+    output_format: str = luigi.Parameter(positional=False, default='z')
 
     def subcommand_args(self):
         args = ['merge']
