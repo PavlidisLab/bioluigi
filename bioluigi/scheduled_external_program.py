@@ -18,11 +18,16 @@ from .config import bioluigi
 
 cfg = bioluigi()
 
-logger = logging.getLogger('luigi-interface')
+logger = logging.getLogger(__name__)
 
 _schedulers = {}
 
 def register_scheduler(blurb):
+    """
+    :param blurb: Short name by with the scheduler is referred to
+    or if it should be done through Luigi's resource management system.
+    """
+
     global _schedulers
 
     def wrapper(cls):
@@ -32,13 +37,8 @@ def register_scheduler(blurb):
     return wrapper
 
 class Scheduler:
-    """
-    :param blurb: Short name by with the scheduler is referred to
-    or if it should be done through Luigi's resource management system.
-    """
-
     @classmethod
-    def run_task(self, task):
+    def run_task(cls, task):
         raise NotImplementedError
 
 @register_scheduler('slurm')
@@ -48,7 +48,7 @@ class SlurmScheduler(Scheduler):
     """
 
     @classmethod
-    def run_task(self, task):
+    def run_task(cls, task):
         secs = int(task.walltime.total_seconds())
         srun_args = ['srun']
         srun_args.extend([
@@ -71,7 +71,7 @@ class SlurmScheduler(Scheduler):
         with ExternalProgramRunContext(proc):
             stdout, stderr = proc.communicate()
         if proc.returncode != 0:
-            raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
+            raise ExternalProgramRunError('Program exited with non-zero return code.', tuple(args), env, stdout, stderr)
         if task.capture_output:
             logger.info('Program stdout:\n{}'.format(stdout))
             logger.info('Program stderr:\n{}'.format(stderr))

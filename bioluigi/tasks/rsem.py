@@ -1,4 +1,5 @@
 from os.path import exists, join
+from typing import Optional
 
 import luigi
 from luigi.util import requires
@@ -38,13 +39,13 @@ class PrepareReference(ScheduledExternalProgramTask):
     """
     task_namespace = 'rsem'
 
-    annotation_file = luigi.Parameter()
-    reference_fasta_files = luigi.ListParameter()
-    reference_name = luigi.Parameter()
+    annotation_file: str = luigi.Parameter()
+    reference_fasta_files: list[str] = luigi.ListParameter()
+    reference_name: str = luigi.Parameter()
 
-    aligner = luigi.ChoiceParameter(choices=['star'], positional=False)
+    aligner: str = luigi.ChoiceParameter(choices=['star'], positional=False)
 
-    star_path = luigi.OptionalParameter(default=None, positional=False)
+    star_path: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
     def program_args(self):
         args = [join(cfg.rsem_dir, 'rsem-prepare-reference')]
@@ -81,12 +82,16 @@ class CalculateExpression(ScheduledExternalProgramTask):
     """
     task_namespace = 'rsem'
 
-    upstream_read_files = luigi.ListParameter()
-    sample_name = luigi.Parameter()
+    reference_name: str
+    star_path: Optional[str]
+    aligner: str
 
-    strandedness = luigi.ChoiceParameter(default='none', choices=['none', 'forward', 'reverse'], positional=False)
+    upstream_read_files: list[str] = luigi.ListParameter()
+    sample_name: str = luigi.Parameter()
 
-    extra_args = luigi.ListParameter(default=[], positional=False)
+    strandedness: str = luigi.ChoiceParameter(default='none', choices=['none', 'forward', 'reverse'], positional=False)
+
+    extra_args: list[str] = luigi.ListParameter(default=[], positional=False)
 
     def program_args(self):
         args = [join(cfg.rsem_dir, 'rsem-calculate-expression')]

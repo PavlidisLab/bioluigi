@@ -6,7 +6,7 @@ from .utils import RemoveTaskOutputOnFailureMixin
 from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
-logger = logging.getLogger('luigi-interface')
+logger = logging.getLogger(__name__)
 
 cfg = bioluigi()
 

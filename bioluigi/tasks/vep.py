@@ -25,9 +25,9 @@ class Annotate(ScheduledExternalProgramTask):
     species = luigi.Parameter(positional=False)
     assembly = luigi.Parameter(positional=False)
 
-    plugins = luigi.ListParameter(default=[], positional=False)
+    plugins: list[str] = luigi.ListParameter(default=[], positional=False)
 
-    extra_args = luigi.ListParameter(default=[])
+    extra_args: list[str] = luigi.ListParameter(default=[])
 
     output_format = luigi.ChoiceParameter(choices=['vcf', 'tab', 'json'], default='vcf')
     compress_output = luigi.ChoiceParameter(choices=['gzip', 'bgzip'], default='bgzip')
