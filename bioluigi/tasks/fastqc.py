@@ -1,4 +1,5 @@
 from os.path import join, basename, splitext
+from typing import Optional
 
 import luigi
 
@@ -10,11 +11,11 @@ cfg = bioluigi()
 class GenerateReport(ScheduledExternalProgramTask):
     task_namespace = 'fastqc'
 
-    input_file = luigi.Parameter()
-    output_dir = luigi.Parameter()
+    input_file: str = luigi.Parameter()
+    output_dir: str = luigi.Parameter()
 
-    temp_dir = luigi.OptionalParameter(positional=False, significant=False,
-                                       description='Temporary directory to use for FastQC intermediary files.')
+    temp_dir: Optional[str] = luigi.OptionalParameter(positional=False, significant=False,
+                                                      description='Temporary directory to use for FastQC intermediary files.')
 
     @staticmethod
     def gen_report_basename(fastq_path):
