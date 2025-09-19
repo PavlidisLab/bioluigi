@@ -71,7 +71,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     clip: bool = luigi.BoolParameter(default=False, positional=False,
                                      description='Clip the reads to remove adapter sequences')
 
-    minimum_read_length: Optional[int] = luigi.IntParameter(default=None, positional=False,
+    minimum_read_length: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False,
                                                             description='Minimum read length to be extracted from the archive')
 
     number_of_reads_per_spot: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False,
