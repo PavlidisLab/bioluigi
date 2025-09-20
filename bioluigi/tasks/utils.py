@@ -43,6 +43,7 @@ class DynamicTaskWithOutputMixin(luigi.Task):
     """
     Extends a task to forward its dynamic dependencies as output.
     """
+    unpack_singleton = True
 
     def output(self):
         tasks = []
@@ -57,7 +58,7 @@ class DynamicTaskWithOutputMixin(luigi.Task):
         # FIXME: conserve task structure: the generator actually create an
         # implicit array level even if a single task is yielded.
         # For now, we just handle the special singleton case.
-        if len(tasks) == 1:
+        if self.unpack_singleton and len(tasks) == 1:
             tasks = tasks[0]
 
         return getpaths(tasks)
