@@ -45,6 +45,8 @@ class CellRangerCount(ScheduledExternalProgramTask):
     scheduler, you might want to constraint machines that can run this job by passing <scheduler>_extra_args. For Slurm,
      use the --constraint option.
     """
+    task_namespace = 'cellranger'
+
     id: str = luigi.Parameter()
     transcriptome_dir: str = luigi.Parameter(
         description='Directory containing a valid Cell Ranger transcriptome reference.')
