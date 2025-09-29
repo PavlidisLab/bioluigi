@@ -43,7 +43,7 @@ class DynamicTaskWithOutputMixin(luigi.Task):
     """
     Extends a task to forward its dynamic dependencies as output.
     """
-    unpack_singleton = True
+    unpack_singleton = False
 
     def output(self):
         tasks = []
