@@ -8,7 +8,7 @@ import luigi
 from luigi.parameter import DictParameter
 from luigi.task import getpaths, flatten, flatten_output
 
-logger = logging.getLogger('luigi-interface')
+logger = logging.getLogger(__name__)
 
 class DynamicWrapperTask(luigi.Task):
     """
@@ -31,7 +31,7 @@ class DynamicWrapperTask(luigi.Task):
                 repr(self))
             return False
 
-class TaskWithOutputMixin:
+class TaskWithOutputMixin(luigi.Task):
     """
     Extends a luigi.WrapperTask to forward its dependencies as output.
     """
@@ -39,10 +39,11 @@ class TaskWithOutputMixin:
     def output(self):
         return getpaths(self.requires())
 
-class DynamicTaskWithOutputMixin:
+class DynamicTaskWithOutputMixin(luigi.Task):
     """
     Extends a task to forward its dynamic dependencies as output.
     """
+    unpack_singleton = False
 
     def output(self):
         tasks = []
@@ -57,12 +58,12 @@ class DynamicTaskWithOutputMixin:
         # FIXME: conserve task structure: the generator actually create an
         # implicit array level even if a single task is yielded.
         # For now, we just handle the special singleton case.
-        if len(tasks) == 1:
+        if self.unpack_singleton and len(tasks) == 1:
             tasks = tasks[0]
 
         return getpaths(tasks)
 
-class CreateTaskOutputDirectoriesBeforeRunMixin:
+class CreateTaskOutputDirectoriesBeforeRunMixin(luigi.Task):
     """
     Ensures that output directories exist before running the task.
     """
@@ -73,7 +74,7 @@ class CreateTaskOutputDirectoriesBeforeRunMixin:
                 out.makedirs()
         return super().run()
 
-class RemoveTaskOutputOnFailureMixin:
+class RemoveTaskOutputOnFailureMixin(luigi.Task):
     """
     Remove a task outputs on failure.
 
@@ -90,7 +91,7 @@ class RemoveTaskOutputOnFailureMixin:
                     logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
         return super().on_failure(err)
 
-class TaskWithMetadataMixin:
+class TaskWithMetadataMixin(luigi.Task):
     """
     Mixin that adds an insignificant metadata parameter to a task.
     """
