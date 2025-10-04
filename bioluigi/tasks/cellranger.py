@@ -50,8 +50,8 @@ class CellRangerCount(ScheduledExternalProgramTask):
     id: str = luigi.Parameter()
     transcriptome_dir: str = luigi.Parameter(
         description='Directory containing a valid Cell Ranger transcriptome reference.')
-    fastqs_dir: str = luigi.Parameter('Directory containing FASTQs to analyze.')
-    output_dir: str = luigi.Parameter('Directory where to output the analysis results.')
+    fastqs_dir: str = luigi.Parameter(description='Directory containing FASTQs to analyze.')
+    output_dir: str = luigi.Parameter(description='Directory where to output the analysis results.')
 
     expect_cells: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False)
     force_cells: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False)
