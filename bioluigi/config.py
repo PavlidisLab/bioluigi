@@ -18,3 +18,4 @@ class bioluigi(luigi.Config):
     vep_dir = luigi.OptionalParameter(default='', significant=False)
     multiqc_bin = luigi.Parameter(default='multiqc')
     cellranger_bin = luigi.Parameter(default='cellranger')
+    bamtofastq_bin = luigi.Parameter(default='bamtofastq')

@@ -93,3 +93,18 @@ class CellRangerCount(ScheduledExternalProgramTask):
 
     def output(self):
         return CellRangerCountTarget(self.output_dir)
+
+class BamToFastq(ScheduledExternalProgramTask):
+    """Uses bamtofastq from Cell Ranger to extract FASTQs from a 10x BAM file."""
+    input_file: str = luigi.Parameter()
+    output_dir: str = luigi.Parameter()
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_dir:
+            super().run()
+
+    def program_args(self):
+        return [cfg.bamtofastq_bin, '--nthreads', self.cpus, self.input_file, self._tmp_output_dir]
+
+    def output(self):
+        return luigi.LocalTarget(self.output_dir)
