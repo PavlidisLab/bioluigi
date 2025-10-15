@@ -67,7 +67,7 @@ class CellRangerCount(ScheduledExternalProgramTask):
         args.extend([
             '--id', self.id,
             '--create-bam', 'false',
-            '--output-dir', self.output_dir,
+            '--output-dir', self._tmp_output_dir,
             '--transcriptome', self.transcriptome_dir,
             '--fastqs', self.fastqs_dir])
         # TODO: consider making the UI available, I think we can link to it in Luigi
@@ -88,14 +88,17 @@ class CellRangerCount(ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        makedirs(self.output_dir, exist_ok=True)
-        return super().run()
+        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+            makedirs(self._tmp_output_dir)
+            super().run()
 
     def output(self):
         return CellRangerCountTarget(self.output_dir)
 
 class BamToFastq(ScheduledExternalProgramTask):
     """Uses bamtofastq from Cell Ranger to extract FASTQs from a 10x BAM file."""
+    task_namespace = 'cellranger'
+
     input_file: str = luigi.Parameter()
     output_dir: str = luigi.Parameter()
 
