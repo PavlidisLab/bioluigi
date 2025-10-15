@@ -90,7 +90,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
                                                description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(), positional=False, significant=False,
-                                        description='Amout of time to allocate for the task, default value of zero implies unlimited time')
+                                        description='Amount of time to allocate for the task, default value of zero implies unlimited time')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False,
                               description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False,
