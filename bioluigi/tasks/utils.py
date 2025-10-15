@@ -91,7 +91,7 @@ class RemoveTaskOutputOnFailureMixin(luigi.Task):
                     logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
         return super().on_failure(err)
 
-class TaskWithMetadataMixin(luigi.Task):
+class TaskWithMetadataMixin:
     """
     Mixin that adds an insignificant metadata parameter to a task.
     """
