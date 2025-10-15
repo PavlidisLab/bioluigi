@@ -53,7 +53,7 @@ class SlurmScheduler(Scheduler):
         srun_args = ['srun']
         srun_args.extend([
             '--verbose',
-            '--job-name', repr(task),
+            '--job-name', repr(task)[:100],
             '--time',
             '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
