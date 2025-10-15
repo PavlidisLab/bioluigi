@@ -74,23 +74,6 @@ class CreateTaskOutputDirectoriesBeforeRunMixin(luigi.Task):
                 out.makedirs()
         return super().run()
 
-class RemoveTaskOutputOnFailureMixin(luigi.Task):
-    """
-    Remove a task outputs on failure.
-
-    This only applies for output that have a defined 'remove' method.
-    """
-
-    def on_failure(self, err):
-        logger.info('Removing task output of %s due to failure.', repr(self))
-        for out in flatten_output(self):
-            if out.exists() and hasattr(out, 'remove'):
-                try:
-                    out.remove()
-                except:
-                    logger.exception('Failed to remove output %s while cleaning up %s.', repr(out), repr(self))
-        return super().on_failure(err)
-
 class TaskWithMetadataMixin(luigi.Task):
     """
     Mixin that adds an insignificant metadata parameter to a task.
