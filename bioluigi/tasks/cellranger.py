@@ -62,6 +62,12 @@ class CellRangerCount(ScheduledExternalProgramTask):
     cpus = 8
     memory = 64
 
+    @property
+    def resources(self):
+        res = super().resources
+        res['cellranger_count_jobs'] = 1
+        return res
+
     def program_args(self):
         args = [cfg.cellranger_bin, 'count']
         args.extend([
@@ -101,6 +107,14 @@ class BamToFastq(ScheduledExternalProgramTask):
 
     input_file: str = luigi.Parameter()
     output_dir: str = luigi.Parameter()
+
+    _tmp_output_dir: str = None
+
+    @property
+    def resources(self):
+        r = super().resources
+        r.update({'cellranger_bamtofastq_jobs': 1})
+        return r
 
     def run(self):
         with self.output().temporary_path() as self._tmp_output_dir:
