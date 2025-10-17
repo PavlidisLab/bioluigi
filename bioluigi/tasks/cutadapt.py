@@ -24,6 +24,12 @@ class CutadaptTask(ScheduledExternalProgramTask):
 
     report_file = luigi.OptionalParameter(default='', positional=False, description='Destination for the JSON report')
 
+    @property
+    def resources(self):
+        r = super().resources
+        r.update({'cutadapt_jobs': 1})
+        return r
+
     def program_args(self):
         args = [cfg.cutadapt_bin]
 
