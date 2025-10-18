@@ -27,7 +27,7 @@ class CutadaptTask(ScheduledExternalProgramTask):
     @property
     def resources(self):
         r = super().resources
-        r.update({'cutadapt_jobs': 1})
+        r.update({'cutadapt_jobs': 1, 'io_jobs': 1})
         return r
 
     def program_args(self):

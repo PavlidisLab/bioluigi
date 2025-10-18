@@ -113,7 +113,7 @@ class BamToFastq(ScheduledExternalProgramTask):
     @property
     def resources(self):
         r = super().resources
-        r.update({'cellranger_bamtofastq_jobs': 1})
+        r.update({'cellranger_bamtofastq_jobs': 1, 'io_jobs': 1})
         return r
 
     def run(self):

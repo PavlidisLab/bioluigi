@@ -83,7 +83,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     @property
     def resources(self):
         r = super().resources
-        r.update({'fastq_dump_jobs': 1})
+        r.update({'fastq_dump_jobs': 1, 'io_jobs': 1})
         return r
 
     def __init__(self, *kwargs, **kwds):
