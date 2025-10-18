@@ -1,8 +1,5 @@
-import os
-import shutil
-from os.path import join, split, basename
-from tempfile import mkdtemp
-from typing import Optional
+from os.path import join, basename, splitext
+from typing import Optional, SupportsIndex
 
 import luigi
 
@@ -80,6 +77,8 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     skip_technical: bool = luigi.BoolParameter(default=False, positional=False,
                                                description='Skip technical reads. Only applicable if using split=spot.')
 
+    _tmp_output_dir: str = None
+
     @property
     def resources(self):
         r = super().resources
@@ -91,7 +90,6 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         if self.split == 'files' and self.number_of_reads_per_spot is None:
             raise ValueError(
                 'If split_files is True, number_of_reads_per_spot must be set.')
-        self.temp_output_dir = None
 
     def program_args(self):
         args = [cfg.fastqdump_bin,
@@ -119,29 +117,18 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
 
         # temp_output_dir is only set within a run() execution, so this is a
         # graceful fallback
-        args.extend(['--outdir', self.temp_output_dir if self.temp_output_dir else self.output_dir])
+        args.extend(['--outdir', self._tmp_output_dir if self._tmp_output_dir else self.output_dir])
 
         args.append(self.input_file)
 
         return args
 
     def run(self):
-        base, tail = split(self.output_dir)
-        self.temp_output_dir = mkdtemp(prefix=tail + '-tmp', dir=base)
-        try:
+        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
             super().run()
-            # move every output to the final directory
-            for out in self.output():
-                tmp_out_path = join(self.temp_output_dir, basename(out.path))
-                if os.path.exists(tmp_out_path):
-                    out.makedirs()
-                    os.replace(tmp_out_path, out.path)
-        finally:
-            shutil.rmtree(self.temp_output_dir)
-            self.temp_output_dir = None
 
     def output(self):
-        sra_accession, _ = os.path.splitext(os.path.basename(self.input_file))
+        sra_accession, _ = splitext(basename(self.input_file))
         if self.split == 'three':
             return [luigi.LocalTarget(join(self.output_dir, sra_accession + '.fastq.gz')),
                     luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
