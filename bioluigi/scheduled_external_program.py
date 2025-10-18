@@ -18,11 +18,16 @@ from .config import bioluigi
 
 cfg = bioluigi()
 
-logger = logging.getLogger('luigi-interface')
+logger = logging.getLogger(__name__)
 
 _schedulers = {}
 
 def register_scheduler(blurb):
+    """
+    :param blurb: Short name by with the scheduler is referred to
+    or if it should be done through Luigi's resource management system.
+    """
+
     global _schedulers
 
     def wrapper(cls):
@@ -32,13 +37,8 @@ def register_scheduler(blurb):
     return wrapper
 
 class Scheduler:
-    """
-    :param blurb: Short name by with the scheduler is referred to
-    or if it should be done through Luigi's resource management system.
-    """
-
     @classmethod
-    def run_task(self, task):
+    def run_task(cls, task):
         raise NotImplementedError
 
 @register_scheduler('slurm')
@@ -48,12 +48,12 @@ class SlurmScheduler(Scheduler):
     """
 
     @classmethod
-    def run_task(self, task):
+    def run_task(cls, task):
         secs = int(task.walltime.total_seconds())
         srun_args = ['srun']
         srun_args.extend([
             '--verbose',
-            '--job-name', repr(task),
+            '--job-name', repr(task)[:100],
             '--time',
             '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
@@ -71,7 +71,7 @@ class SlurmScheduler(Scheduler):
         with ExternalProgramRunContext(proc):
             stdout, stderr = proc.communicate()
         if proc.returncode != 0:
-            raise ExternalProgramRunError('Program exited with non-zero return code.', args, env, stdout, stderr)
+            raise ExternalProgramRunError('Program exited with non-zero return code.', tuple(args), env, stdout, stderr)
         if task.capture_output:
             logger.info('Program stdout:\n{}'.format(stdout))
             logger.info('Program stderr:\n{}'.format(stderr))
@@ -90,7 +90,7 @@ class ScheduledExternalProgramTask(ExternalProgramTask):
                                                description='Extra arguments to pass to the scheduler')
 
     walltime = luigi.TimeDeltaParameter(default=datetime.timedelta(), positional=False, significant=False,
-                                        description='Amout of time to allocate for the task, default value of zero implies unlimited time')
+                                        description='Amount of time to allocate for the task, default value of zero implies unlimited time')
     cpus = luigi.IntParameter(default=1, positional=False, significant=False,
                               description='Number of CPUs to allocate for the task')
     memory = luigi.FloatParameter(default=1, positional=False, significant=False,

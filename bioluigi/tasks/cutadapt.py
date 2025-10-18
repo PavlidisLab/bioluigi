@@ -2,33 +2,38 @@ import logging
 
 import luigi
 
-from .utils import RemoveTaskOutputOnFailureMixin
 from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
-logger = logging.getLogger('luigi-interface')
+logger = logging.getLogger(__name__)
 
 cfg = bioluigi()
 
-class CutadaptTask(RemoveTaskOutputOnFailureMixin, ScheduledExternalProgramTask):
+class CutadaptTask(ScheduledExternalProgramTask):
     """
     Base class for all cutadapt-derived tasks.
     """
     task_namespace = 'cutadapt'
 
-    adapter_3prime = luigi.OptionalParameter(default='', positional=False)
-    adapter_5prime = luigi.OptionalParameter(default='', positional=False)
+    adapter_3prime = luigi.OptionalParameter(default=None, positional=False)
+    adapter_5prime = luigi.OptionalParameter(default=None, positional=False)
 
     cut = luigi.IntParameter(default=0, positional=False)
     trim_n = luigi.BoolParameter(default=False, positional=False)
     minimum_length = luigi.IntParameter(default=0, positional=False)
 
-    report_file = luigi.OptionalParameter(default='', positional=False, description='Destination for the JSON report')
+    report_file = luigi.OptionalParameter(default=None, positional=False, description='Destination for the JSON report')
+
+    @property
+    def resources(self):
+        r = super().resources
+        r.update({'cutadapt_jobs': 1, 'io_jobs': 1})
+        return r
 
     def program_args(self):
         args = [cfg.cutadapt_bin]
 
-        args.extend(['-j', self.cpus])
+        args.extend(['-j', str(self.cpus)])
 
         if self.adapter_3prime:
             args.extend(['-a', self.adapter_3prime])
@@ -58,10 +63,17 @@ class TrimReads(CutadaptTask):
     input_file = luigi.Parameter()
     output_file = luigi.Parameter()
 
+    # temporary location for cutadapt output
+    _tmp_output_file: str = None
+
     def program_args(self):
         args = super().program_args()
-        args.extend(['-o', self.output_file, self.input_file])
+        args.extend(['-o', self._tmp_output_file if self._tmp_output_file else self.output_file, self.input_file])
         return args
+
+    def run(self):
+        with self.output()[0].temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return [luigi.LocalTarget(self.output_file)]
@@ -75,6 +87,10 @@ class TrimPairedReads(CutadaptTask):
     reverse_adapter_3prime = luigi.OptionalParameter(default='', positional=False)
     reverse_adapter_5prime = luigi.OptionalParameter(default='', positional=False)
 
+    # temporary location for cutadapt output
+    _tmp_output_file: str = None
+    _tmp_output2_file: str = None
+
     def program_args(self):
         args = super().program_args()
         if self.reverse_adapter_3prime:
@@ -82,10 +98,15 @@ class TrimPairedReads(CutadaptTask):
         if self.reverse_adapter_5prime:
             args.extend(['-G', self.reverse_adapter_5prime])
         args.extend([
-            '-o', self.output_file,
-            '-p', self.output2_file,
+            '-o', self._tmp_output_file if self._tmp_output_file else self.output_file,
+            '-p', self._tmp_output2_file if self._tmp_output2_file else self.output2_file,
             self.input_file, self.input2_file])
         return args
+
+    def run(self):
+        with self.output()[0].temporary_path() as self._tmp_output_file, \
+                self.output()[1].temporary_path() as self._tmp_output2_file:
+            super().run()
 
     def output(self):
         return [luigi.LocalTarget(self.output_file), luigi.LocalTarget(self.output2_file)]
