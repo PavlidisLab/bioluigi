@@ -15,14 +15,14 @@ class CutadaptTask(ScheduledExternalProgramTask):
     """
     task_namespace = 'cutadapt'
 
-    adapter_3prime = luigi.OptionalParameter(default='', positional=False)
-    adapter_5prime = luigi.OptionalParameter(default='', positional=False)
+    adapter_3prime = luigi.OptionalParameter(default=None, positional=False)
+    adapter_5prime = luigi.OptionalParameter(default=None, positional=False)
 
     cut = luigi.IntParameter(default=0, positional=False)
     trim_n = luigi.BoolParameter(default=False, positional=False)
     minimum_length = luigi.IntParameter(default=0, positional=False)
 
-    report_file = luigi.OptionalParameter(default='', positional=False, description='Destination for the JSON report')
+    report_file = luigi.OptionalParameter(default=None, positional=False, description='Destination for the JSON report')
 
     @property
     def resources(self):
