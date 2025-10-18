@@ -62,6 +62,8 @@ class CellRangerCount(ScheduledExternalProgramTask):
     cpus = 8
     memory = 64
 
+    _tmp_output_dir: str = None
+
     @property
     def resources(self):
         res = super().resources
@@ -73,7 +75,7 @@ class CellRangerCount(ScheduledExternalProgramTask):
         args.extend([
             '--id', self.id,
             '--create-bam', 'false',
-            '--output-dir', self._tmp_output_dir,
+            '--output-dir', self._tmp_output_dir if self._tmp_output_dir else self.output_dir,
             '--transcriptome', self.transcriptome_dir,
             '--fastqs', self.fastqs_dir])
         # TODO: consider making the UI available, I think we can link to it in Luigi
@@ -121,7 +123,8 @@ class BamToFastq(ScheduledExternalProgramTask):
             super().run()
 
     def program_args(self):
-        return [cfg.bamtofastq_bin, '--nthreads', self.cpus, self.input_file, self._tmp_output_dir]
+        return [cfg.bamtofastq_bin, '--nthreads', str(self.cpus), self.input_file,
+                self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
 
     def output(self):
         return luigi.LocalTarget(self.output_dir)

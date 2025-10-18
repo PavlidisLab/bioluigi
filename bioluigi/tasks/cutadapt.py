@@ -33,7 +33,7 @@ class CutadaptTask(ScheduledExternalProgramTask):
     def program_args(self):
         args = [cfg.cutadapt_bin]
 
-        args.extend(['-j', self.cpus])
+        args.extend(['-j', str(self.cpus)])
 
         if self.adapter_3prime:
             args.extend(['-a', self.adapter_3prime])
@@ -68,7 +68,7 @@ class TrimReads(CutadaptTask):
 
     def program_args(self):
         args = super().program_args()
-        args.extend(['-o', self._tmp_output_file, self.input_file])
+        args.extend(['-o', self._tmp_output_file if self._tmp_output_file else self.output_file, self.input_file])
         return args
 
     def run(self):
@@ -98,8 +98,8 @@ class TrimPairedReads(CutadaptTask):
         if self.reverse_adapter_5prime:
             args.extend(['-G', self.reverse_adapter_5prime])
         args.extend([
-            '-o', self._tmp_output_file,
-            '-p', self._tmp_output2_file,
+            '-o', self._tmp_output_file if self._tmp_output_file else self.output_file,
+            '-p', self._tmp_output2_file if self._tmp_output2_file else self.output2_file,
             self.input_file, self.input2_file])
         return args
 

@@ -26,7 +26,7 @@ class GenerateReport(ScheduledExternalProgramTask):
     _did_run: bool = False
 
     def program_args(self):
-        args = [cfg.multiqc_bin, '--outdir', self._tmp_output_dir]
+        args = [cfg.multiqc_bin, '--outdir', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
         if self.sample_names:
             args.extend(['--sample-names', self.sample_names])
         if self.replace_names:
