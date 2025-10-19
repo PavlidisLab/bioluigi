@@ -1,3 +1,5 @@
+import os
+from os import makedirs
 from os.path import join, basename, splitext
 from typing import Optional
 
@@ -17,6 +19,8 @@ class GenerateReport(ScheduledExternalProgramTask):
     temp_dir: Optional[str] = luigi.OptionalParameter(positional=False, significant=False,
                                                       description='Temporary directory to use for FastQC intermediary files.')
 
+    _tmp_output_dir: str = None
+
     @staticmethod
     def gen_report_basename(fastq_path):
         sample_name, ext = splitext(basename(fastq_path))
@@ -26,11 +30,16 @@ class GenerateReport(ScheduledExternalProgramTask):
 
     def program_args(self):
         args = [cfg.fastqc_bin,
-                '--outdir', self.output_dir]
+                '--outdir', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
         if self.temp_dir:
             args.extend(['--dir', self.temp_dir])
         args.append(self.input_file)
         return args
+
+    def run(self):
+        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+            makedirs(self._tmp_output_dir)
+            return super().run()
 
     def output(self):
         return luigi.LocalTarget(join(self.output_dir, self.gen_report_basename(self.input_file)))
