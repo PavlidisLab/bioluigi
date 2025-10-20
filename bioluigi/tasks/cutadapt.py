@@ -1,4 +1,8 @@
 import logging
+import os
+import random
+from contextlib import contextmanager
+from typing import Optional
 
 import luigi
 
@@ -9,20 +13,42 @@ logger = logging.getLogger(__name__)
 
 cfg = bioluigi()
 
+class LocalTarget(luigi.LocalTarget):
+    """A *patched* LocalTarget that allows for a suffix to be added to the temporary filename."""
+
+    @contextmanager
+    def temporary_path(self, suffix=None):
+        num = random.randrange(0, 10_000_000_000)
+        slashless_path = self.path.rstrip('/').rstrip("\\")
+        _temp_path = '{}-luigi-tmp-{:010}{}{}'.format(
+            slashless_path,
+            num,
+            suffix if suffix else '',
+            self._trailing_slash())
+        # TODO: os.path doesn't make sense here as it's os-dependent
+        tmp_dir = os.path.dirname(slashless_path)
+        if tmp_dir:
+            self.fs.mkdir(tmp_dir, parents=True, raise_if_exists=False)
+
+        yield _temp_path
+        # We won't reach here if there was an user exception.
+        self.fs.rename_dont_move(_temp_path, self.path)
+
 class CutadaptTask(ScheduledExternalProgramTask):
     """
     Base class for all cutadapt-derived tasks.
     """
     task_namespace = 'cutadapt'
 
-    adapter_3prime = luigi.OptionalParameter(default=None, positional=False)
-    adapter_5prime = luigi.OptionalParameter(default=None, positional=False)
+    adapter_3prime: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    adapter_5prime: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
-    cut = luigi.IntParameter(default=0, positional=False)
-    trim_n = luigi.BoolParameter(default=False, positional=False)
-    minimum_length = luigi.IntParameter(default=0, positional=False)
+    cut: int = luigi.IntParameter(default=0, positional=False)
+    trim_n: bool = luigi.BoolParameter(default=False, positional=False)
+    minimum_length: int = luigi.IntParameter(default=0, positional=False)
 
-    report_file = luigi.OptionalParameter(default=None, positional=False, description='Destination for the JSON report')
+    report_file: str = luigi.OptionalParameter(default=None, positional=False,
+                                               description='Destination for the JSON report')
 
     @property
     def resources(self):
@@ -60,8 +86,8 @@ class TrimReads(CutadaptTask):
     For consistency with TrimPairedReads, this task output a list with a single
     target corresponding to trimmed FASTQ.
     """
-    input_file = luigi.Parameter()
-    output_file = luigi.Parameter()
+    input_file: str = luigi.Parameter()
+    output_file: str = luigi.Parameter()
 
     # temporary location for cutadapt output
     _tmp_output_file: str = None
@@ -72,20 +98,20 @@ class TrimReads(CutadaptTask):
         return args
 
     def run(self):
-        with self.output()[0].temporary_path() as self._tmp_output_file:
+        with self.output()[0].temporary_path(suffix='.fastq.gz') as self._tmp_output_file:
             super().run()
 
     def output(self):
-        return [luigi.LocalTarget(self.output_file)]
+        return [LocalTarget(self.output_file)]
 
 class TrimPairedReads(CutadaptTask):
-    input_file = luigi.Parameter()
-    input2_file = luigi.Parameter()
-    output_file = luigi.Parameter()
-    output2_file = luigi.Parameter()
+    input_file: str = luigi.Parameter()
+    input2_file: str = luigi.Parameter()
+    output_file: str = luigi.Parameter()
+    output2_file: str = luigi.Parameter()
 
-    reverse_adapter_3prime = luigi.OptionalParameter(default='', positional=False)
-    reverse_adapter_5prime = luigi.OptionalParameter(default='', positional=False)
+    reverse_adapter_3prime: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    reverse_adapter_5prime: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
     # temporary location for cutadapt output
     _tmp_output_file: str = None
@@ -104,9 +130,9 @@ class TrimPairedReads(CutadaptTask):
         return args
 
     def run(self):
-        with self.output()[0].temporary_path() as self._tmp_output_file, \
-                self.output()[1].temporary_path() as self._tmp_output2_file:
+        with self.output()[0].temporary_path(suffix='.fastq.gz') as self._tmp_output_file, \
+            self.output()[1].temporary_path(suffix='.fastq.gz') as self._tmp_output2_file:
             super().run()
 
     def output(self):
-        return [luigi.LocalTarget(self.output_file), luigi.LocalTarget(self.output2_file)]
+        return [LocalTarget(self.output_file), LocalTarget(self.output2_file)]
