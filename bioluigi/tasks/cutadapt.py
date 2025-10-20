@@ -2,6 +2,7 @@ import logging
 import os
 import random
 from contextlib import contextmanager
+from os.path import splitext
 from typing import Optional
 
 import luigi
@@ -14,16 +15,19 @@ logger = logging.getLogger(__name__)
 cfg = bioluigi()
 
 class LocalTarget(luigi.LocalTarget):
-    """A *patched* LocalTarget that allows for a suffix to be added to the temporary filename."""
+    """A *patched* LocalTarget that allows for a suffix to be added to the temporary filename.
+
+    A patch has been submitted for this in https://github.com/spotify/luigi/pull/3365
+    """
 
     @contextmanager
-    def temporary_path(self, suffix=None):
+    def temporary_path(self):
         num = random.randrange(0, 10_000_000_000)
-        slashless_path = self.path.rstrip('/').rstrip("\\")
+        slashless_path, ext = splitext(self.path.rstrip('/').rstrip("\\"))
         _temp_path = '{}-luigi-tmp-{:010}{}{}'.format(
             slashless_path,
             num,
-            suffix if suffix else '',
+            ext,
             self._trailing_slash())
         # TODO: os.path doesn't make sense here as it's os-dependent
         tmp_dir = os.path.dirname(slashless_path)
@@ -98,7 +102,7 @@ class TrimReads(CutadaptTask):
         return args
 
     def run(self):
-        with self.output()[0].temporary_path(suffix='.fastq.gz') as self._tmp_output_file:
+        with self.output()[0].temporary_path() as self._tmp_output_file:
             super().run()
 
     def output(self):
@@ -130,8 +134,8 @@ class TrimPairedReads(CutadaptTask):
         return args
 
     def run(self):
-        with self.output()[0].temporary_path(suffix='.fastq.gz') as self._tmp_output_file, \
-            self.output()[1].temporary_path(suffix='.fastq.gz') as self._tmp_output2_file:
+        with self.output()[0].temporary_path() as self._tmp_output_file, \
+            self.output()[1].temporary_path() as self._tmp_output2_file:
             super().run()
 
     def output(self):
