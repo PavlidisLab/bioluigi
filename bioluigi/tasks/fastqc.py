@@ -21,6 +21,12 @@ class GenerateReport(ScheduledExternalProgramTask):
 
     _tmp_output_dir: str = None
 
+    @property
+    def resources(self):
+        r = super().resources
+        r.update({'fastqc_jobs': 1, 'io_jobs': 1})
+        return r
+
     @staticmethod
     def gen_report_basename(fastq_path):
         sample_name, ext = splitext(basename(fastq_path))

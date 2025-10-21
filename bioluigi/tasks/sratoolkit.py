@@ -30,12 +30,13 @@ class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     @property
     def resources(self):
         r = super().resources
-        r.update({'prefetch_jobs': 1})
+        r.update({'prefetch_jobs': 1, 'io_jobs': 1})
         return r
 
     def program_args(self):
         args = [cfg.prefetch_bin,
                 '--max-size', '{}G'.format(self.max_size),
+                # prefetch already has a built-in mechanism to coordinate multiple reader/writer with a lockfile
                 '--output-file', self.output().path]
 
         args.extend(self.extra_args)
