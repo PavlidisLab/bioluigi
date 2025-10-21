@@ -1,3 +1,4 @@
+from abc import abstractmethod, ABC
 from os.path import join
 from typing import Optional
 
@@ -8,7 +9,7 @@ from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
 
-class BcftoolsTask(ScheduledExternalProgramTask):
+class BcftoolsTask(ScheduledExternalProgramTask, ABC):
     task_namespace = 'bcftools'
 
     input_file: str = luigi.Parameter()
@@ -23,6 +24,7 @@ class BcftoolsTask(ScheduledExternalProgramTask):
 
     # FIXME: the '--threads' flag does not seem to work
 
+    @abstractmethod
     def subcommand_args(self):
         """Returns specific sub-command arguments."""
         raise NotImplementedError
@@ -73,10 +75,16 @@ class View(BcftoolsTask):
     output_file = luigi.Parameter()
     output_format = luigi.Parameter(positional=False, default='z')
 
+    _tmp_output_file: str = None
+
     def subcommand_args(self):
         return ['view',
                 '--output-type', self.output_format,
-                '--output-file', self.output_file]
+                '--output-file', self._tmp_output_file if self._tmp_output_file else self.output_file]
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
@@ -95,6 +103,8 @@ class Annotate(BcftoolsTask):
 
     rename_chrs: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
+    _tmp_output_file: str = None
+
     def subcommand_args(self):
         args = ['annotate']
 
@@ -107,9 +117,13 @@ class Annotate(BcftoolsTask):
 
         args.extend([
             '--output-type', self.output_format,
-            '--output', self.output_file])
+            '--output-file', self._tmp_output_file if self._tmp_output_file else self.output_file])
 
         return args
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
@@ -120,11 +134,17 @@ class Sort(BcftoolsTask):
 
     tmp_dir = luigi.Parameter(default='/tmp', significant=False)
 
+    _tmp_output_file: str = None
+
     def subcommand_args(self):
         return ['sort',
                 '--temp-dir', self.tmp_dir,
                 '--output-type', self.output_format,
-                '--output', self.output_file]
+                '--output', self._tmp_output_file if self._tmp_output_file else self.output_file]
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
@@ -144,11 +164,17 @@ class Intersect(BcftoolsTask):
     input_file2: str = luigi.Parameter()
     output_dir: str = luigi.Parameter()
 
+    _tmp_output_dir: str = None
+
     def subcommand_args(self):
-        return ['isec', '-p', self.output_dir]
+        return ['isec', '-p', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
 
     def subcommand_input_args(self):
         return [self.input_file, self.input_file2]
+
+    def run(self):
+        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+            super().run()
 
     def output(self):
         return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
@@ -165,6 +191,8 @@ class Merge(BcftoolsTask):
     output_file: str = luigi.Parameter()
     output_format: str = luigi.Parameter(positional=False, default='z')
 
+    _tmp_output_file : str = None
+
     def subcommand_args(self):
         args = ['merge']
 
@@ -175,12 +203,16 @@ class Merge(BcftoolsTask):
 
         args.extend([
             '--output-type', self.output_format,
-            '--output', self.output_file])
+            '--output', self._tmp_output_file if self._tmp_output_file else self.output_file])
 
         return args
 
     def subcommand_input_args(self):
         return self.input_file
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return luigi.LocalTarget(self.output_file)
