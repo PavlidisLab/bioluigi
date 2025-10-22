@@ -12,7 +12,7 @@ from ..scheduled_external_program import ScheduledExternalProgramTask
 cfg = bioluigi()
 
 class LocalTarget(luigi.LocalTarget):
-    """A *patched* LocalTarget that allows for a suffix to be added to the temporary filename.
+    """A *patched* LocalTarget that preserves file extensions in temporary filenames.
 
     A patch has been submitted for this in https://github.com/spotify/luigi/pull/3365
     """
