@@ -191,7 +191,7 @@ class Merge(BcftoolsTask):
     output_file: str = luigi.Parameter()
     output_format: str = luigi.Parameter(positional=False, default='z')
 
-    _tmp_output_file : str = None
+    _tmp_output_file: str = None
 
     def subcommand_args(self):
         args = ['merge']

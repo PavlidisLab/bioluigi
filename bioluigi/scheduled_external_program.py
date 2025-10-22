@@ -8,7 +8,6 @@ required to execute the task.
 """
 
 import datetime
-import logging
 from datetime import timedelta
 from typing import Optional
 
@@ -20,14 +19,13 @@ from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask
 
 cfg = bioluigi()
 
-logger = logging.getLogger(__name__)
-
 class ScheduledExternalProgramTask(ExternalProgramTask, ScheduledTask):
     """
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.
     """
-    scheduler: str = luigi.ChoiceParameter(default=cfg.scheduler, choices=['local'] + [blurb for blurb in get_available_schedulers()],
+    scheduler: str = luigi.ChoiceParameter(default=cfg.scheduler,
+                                           choices=['local'] + [blurb for blurb in get_available_schedulers()],
                                            positional=False, significant=False,
                                            description='Scheduler to use for running the task')
     scheduler_partition: Optional[str] = luigi.OptionalParameter(default=cfg.scheduler_partition, positional=False,

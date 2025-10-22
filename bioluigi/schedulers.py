@@ -1,12 +1,11 @@
+import json
 import logging
-from abc import abstractmethod, ABC, abstractclassmethod
+from abc import abstractmethod, ABC
 from datetime import timedelta
 from subprocess import Popen, PIPE
-import json
 from typing import Optional
 
 import luigi
-
 from luigi.contrib.external_program import ExternalProgramRunError, ExternalProgramRunContext
 
 logger = logging.getLogger(__name__)

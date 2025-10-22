@@ -1,4 +1,3 @@
-import logging
 import os
 import random
 from contextlib import contextmanager
@@ -9,8 +8,6 @@ import luigi
 
 from ..config import bioluigi
 from ..scheduled_external_program import ScheduledExternalProgramTask
-
-logger = logging.getLogger(__name__)
 
 cfg = bioluigi()
 

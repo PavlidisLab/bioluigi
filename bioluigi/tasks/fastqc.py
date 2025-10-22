@@ -1,4 +1,3 @@
-import os
 from os import makedirs
 from os.path import join, basename, splitext
 from typing import Optional

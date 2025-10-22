@@ -28,7 +28,7 @@ class MyTask(ScheduledExternalProgramTask):
 def test_default_scheduler():
     task = MyTask("1")
     assert task.scheduler == 'local'
-    assert task.scheduler_partition == ''
+    assert task.scheduler_partition is None
     assert task.resources['cpus'] == 4
     assert not task.complete()
     luigi.build([task], local_scheduler=True)

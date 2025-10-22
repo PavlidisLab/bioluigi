@@ -1,5 +1,5 @@
 from os.path import join, basename, splitext
-from typing import Optional, SupportsIndex
+from typing import Optional
 
 import luigi
 
