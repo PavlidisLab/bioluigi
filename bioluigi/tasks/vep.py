@@ -1,3 +1,5 @@
+from typing import Optional
+
 import luigi
 
 from ..config import bioluigi
@@ -32,7 +34,7 @@ class Annotate(ScheduledExternalProgramTask):
     output_format = luigi.ChoiceParameter(choices=['vcf', 'tab', 'json'], default='vcf')
     compress_output = luigi.ChoiceParameter(choices=['gzip', 'bgzip'], default='bgzip')
 
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def program_args(self):
         args = [cfg.vep_bin,

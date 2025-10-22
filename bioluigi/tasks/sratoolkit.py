@@ -78,7 +78,7 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     skip_technical: bool = luigi.BoolParameter(default=False, positional=False,
                                                description='Skip technical reads. Only applicable if using split=spot.')
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
 
     @property
     def resources(self):

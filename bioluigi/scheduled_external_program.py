@@ -19,7 +19,7 @@ from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask
 
 cfg = bioluigi()
 
-class ScheduledExternalProgramTask(luigi.Task, ScheduledTask):
+class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
     """
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.

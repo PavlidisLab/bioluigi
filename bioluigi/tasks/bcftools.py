@@ -75,7 +75,7 @@ class View(BcftoolsTask):
     output_file = luigi.Parameter()
     output_format = luigi.Parameter(positional=False, default='z')
 
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         return ['view',
@@ -103,7 +103,7 @@ class Annotate(BcftoolsTask):
 
     rename_chrs: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         args = ['annotate']
@@ -134,7 +134,7 @@ class Sort(BcftoolsTask):
 
     tmp_dir = luigi.Parameter(default='/tmp', significant=False)
 
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         return ['sort',
@@ -164,7 +164,7 @@ class Intersect(BcftoolsTask):
     input_file2: str = luigi.Parameter()
     output_dir: str = luigi.Parameter()
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
 
     def subcommand_args(self):
         return ['isec', '-p', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
@@ -191,7 +191,7 @@ class Merge(BcftoolsTask):
     output_file: str = luigi.Parameter()
     output_format: str = luigi.Parameter(positional=False, default='z')
 
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         args = ['merge']

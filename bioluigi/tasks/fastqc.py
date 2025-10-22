@@ -18,7 +18,7 @@ class GenerateReport(ScheduledExternalProgramTask):
     temp_dir: Optional[str] = luigi.OptionalParameter(positional=False, significant=False,
                                                       description='Temporary directory to use for FastQC intermediary files.')
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
 
     @property
     def resources(self):

@@ -62,7 +62,7 @@ class CellRangerCount(ScheduledExternalProgramTask):
     cpus = 8
     memory = 64
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
 
     @property
     def resources(self):
@@ -110,7 +110,7 @@ class BamToFastq(ScheduledExternalProgramTask):
     input_file: str = luigi.Parameter()
     output_dir: str = luigi.Parameter()
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
 
     @property
     def resources(self):

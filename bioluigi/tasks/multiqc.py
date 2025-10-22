@@ -17,12 +17,12 @@ class GenerateReport(ScheduledExternalProgramTask):
     sample_names: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
     replace_names: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
-    title: str = luigi.OptionalParameter(default=None, positional=False)
-    comment: str = luigi.OptionalParameter(default=None, positional=False)
+    title: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    comment: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
     force: bool = luigi.BoolParameter(default=False, positional=False)
 
-    _tmp_output_dir: str = None
+    _tmp_output_dir: Optional[str] = None
     _did_run: bool = False
 
     def program_args(self):
