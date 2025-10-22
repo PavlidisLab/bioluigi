@@ -42,14 +42,6 @@ class ScheduledExternalProgramTask(ExternalProgramTask, ScheduledTask):
     memory: float = luigi.FloatParameter(default=1, positional=False, significant=False,
                                          description='Amount of memory (in gigabyte) to allocate for the task')
 
-    def __init__(self, *kwargs, **kwds):
-        super().__init__(*kwargs, **kwds)
-        try:
-            if self.scheduler != 'local':
-                self._scheduler = get_scheduler(self.scheduler)
-        except KeyError:
-            raise ValueError('Unsupported scheduler {}'.format(self.scheduler))
-
     @property
     def resources(self):
         if self.scheduler == 'local':
@@ -60,6 +52,11 @@ class ScheduledExternalProgramTask(ExternalProgramTask, ScheduledTask):
 
     def run(self):
         if self.scheduler == 'local':
-            return super().run()
+            super().run()
         else:
-            return self._scheduler.run_task(self)
+            try:
+                _scheduler = get_scheduler(self.scheduler)
+            except KeyError:
+                raise ValueError('Unsupported scheduler {}'.format(self.scheduler))
+            _scheduler.run_task(self)
+

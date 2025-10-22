@@ -86,12 +86,6 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         r.update({'fastq_dump_jobs': 1, 'io_jobs': 1})
         return r
 
-    def __init__(self, *kwargs, **kwds):
-        super().__init__(*kwargs, **kwds)
-        if self.split == 'files' and self.number_of_reads_per_spot is None:
-            raise ValueError(
-                'If split_files is True, number_of_reads_per_spot must be set.')
-
     def program_args(self):
         args = [cfg.fastqdump_bin,
                 '--gzip',
@@ -135,6 +129,9 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
                     luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
                     luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
         elif self.split == 'files':
+            if self.number_of_reads_per_spot is None:
+                raise ValueError(
+                    'If split_files is True, number_of_reads_per_spot must be set.')
             return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_' + str(i + 1) + '.fastq.gz'))
                     for i in range(self.number_of_reads_per_spot)]
         elif self.split == 'spot':
