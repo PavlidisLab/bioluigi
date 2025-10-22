@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+import json
+
+payload = {
+    "jobs": [
+        {
+            "comment": ""
+        },
+        {
+        },
+        {
+            "comment": json.dumps({"task_id": "MyTask__99914b932b", "priority": 100})
+        }
+    ]
+}
+
+print(json.dumps(payload))

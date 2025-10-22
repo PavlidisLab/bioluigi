@@ -5,7 +5,7 @@ import luigi
 import luigi.parameter
 
 from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
-from bioluigi.schedulers import get_available_schedulers, SshSchedulerConfig, SlurmSchedulerConfig
+from bioluigi.schedulers import get_available_schedulers, SshSchedulerConfig, SlurmSchedulerConfig, get_scheduler
 
 testdir = dirname(__file__)
 tmp_dir = tempfile.mkdtemp()
@@ -41,6 +41,7 @@ def test_local_scheduler():
 def test_slurm_scheduler():
     slurm_cfg = SlurmSchedulerConfig()
     slurm_cfg.srun_bin = abspath(join(testdir, 'srun-mock'))
+    slurm_cfg.squeue_bin = abspath(join(testdir, 'squeue-mock'))
     assert 'slurm' in get_available_schedulers()
     task = MyTask("3", scheduler='slurm')
     assert 'slurm_jobs' in task.resources
@@ -48,6 +49,10 @@ def test_slurm_scheduler():
     assert task.resources['slurm_jobs'] == 1
     assert task.resources['slurm_cpus'] == 4
     assert not task.complete()
+    slurm_scheduler = get_scheduler('slurm')
+    assert slurm_scheduler.get_task_status_message(task) == '''{
+    "comment": "{\\"task_id\\": \\"MyTask__99914b932b\\", \\"priority\\": 100}"
+}'''
     luigi.build([task], local_scheduler=True)
     assert task.complete()
 

@@ -37,27 +37,6 @@ class ScheduledTask(ABC, luigi.Task):
     def program_args(self) -> list[str]:
         pass
 
-def _run_command(args, env, cwd, capture_output):
-    kwargs = {'env': env, 'universal_newlines': True}
-    if capture_output:
-        kwargs['stdout'] = subprocess.PIPE
-        kwargs['stderr'] = subprocess.PIPE
-    if cwd:
-        kwargs['cwd'] = cwd
-    logger.info('Running command %s%s', ' '.join(args), 'in ' + cwd if cwd else '')
-    proc = Popen(args, **kwargs)
-    with ExternalProgramRunContext(proc):
-        if capture_output:
-            stderr, stdout = proc.communicate()
-            if stdout:
-                logger.info('Program stdout:\n{}'.format(stdout))
-            if stderr:
-                logger.info('Program stderr:\n{}'.format(stderr))
-        else:
-            proc.wait()
-    if proc.returncode != 0:
-        raise ExternalProgramRunError('Program exited with non-zero return code.', tuple(args), env, stdout, stderr)
-
 class Scheduler(ABC):
     @abstractmethod
     def get_resources_for_task(self, task: ScheduledTask) -> dict[str, int]:
@@ -65,6 +44,18 @@ class Scheduler(ABC):
 
     @abstractmethod
     def run_task(self, task: ScheduledTask):
+        pass
+
+    @abstractmethod
+    def get_task_tracking_url(self, task: ScheduledTask) -> Optional[str]:
+        pass
+
+    @abstractmethod
+    def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
+        pass
+
+    @abstractmethod
+    def get_task_progress_percentage(self, task: ScheduledTask) -> Optional[int]:
         pass
 
 _schedulers: dict[str, Scheduler] = {}
@@ -92,6 +83,50 @@ def get_scheduler(blurb):
     except KeyError:
         raise ValueError('Unsupported scheduler {}'.format(blurb))
 
+class BaseScheduler(Scheduler):
+    def _run_command(self, task: ScheduledTask, args, env, cwd, capture_output):
+        kwargs = {'env': env, 'universal_newlines': True}
+        if capture_output:
+            kwargs['stdout'] = subprocess.PIPE
+            kwargs['stderr'] = subprocess.PIPE
+        if cwd:
+            kwargs['cwd'] = cwd
+        logger.info('Running command %s%s', ' '.join(args), 'in ' + cwd if cwd else '')
+        proc = Popen(args, **kwargs)
+        with ExternalProgramRunContext(proc):
+            while True:
+                # update task progress
+                if tracking_url := self.get_task_tracking_url(task):
+                    task.set_tracking_url(tracking_url)
+                if status_message := self.get_task_status_message(task):
+                    task.set_status_message(status_message)
+                if progress_percentage := self.get_task_progress_percentage(
+                    task) is not None:  # might also be zero
+                    task.set_progress_percentage(progress_percentage)
+                try:
+                    if capture_output:
+                        stderr, stdout = proc.communicate(timeout=1)
+                        if stdout:
+                            logger.info('Program stdout:\n{}'.format(stdout))
+                        if stderr:
+                            logger.info('Program stderr:\n{}'.format(stderr))
+                    else:
+                        proc.wait(1)
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
+        if proc.returncode != 0:
+            raise ExternalProgramRunError('Program exited with non-zero return code.', tuple(args), env, stdout, stderr)
+
+    def get_task_tracking_url(self, task: ScheduledTask) -> Optional[str]:
+        return None
+
+    def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
+        return None
+
+    def get_task_progress_percentage(self, task: ScheduledTask) -> Optional[int]:
+        return None
+
 class SlurmSchedulerConfig(luigi.Config):
     @classmethod
     def get_task_family(cls):
@@ -99,13 +134,14 @@ class SlurmSchedulerConfig(luigi.Config):
 
     task_family = 'slurm'
     srun_bin: str = luigi.Parameter(default='srun')
+    squeue_bin: str = luigi.Parameter(default='squeue')
     partition: Optional[str] = luigi.OptionalParameter(default=None)
     extra_args: list[str] = luigi.ListParameter(default=[])
 
 slurm_cfg = SlurmSchedulerConfig()
 
 @register_scheduler('slurm')
-class SlurmScheduler(Scheduler):
+class SlurmScheduler(BaseScheduler):
     """
     Scheduler based on Slurm https://slurm.schedmd.com/
     """
@@ -136,19 +172,33 @@ class SlurmScheduler(Scheduler):
         args.extend(map(str, slurm_cfg.extra_args))
         args.extend(map(str, task.scheduler_extra_args))
         args.extend(map(str, task.program_args()))
-        _run_command(args, env=(task.program_environment()), cwd=task.working_directory,
-                     capture_output=task.capture_output)
+        self._run_command(task, args=args, env=(task.program_environment()), cwd=task.working_directory,
+                          capture_output=task.capture_output)
+
+    def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
+        payload = json.loads(subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE, text=True).stdout)
+        for job_def in payload['jobs']:
+            if 'comment' in job_def:
+                try:
+                    comment_json = json.loads(job_def['comment'])
+                except json.JSONDecodeError:
+                    continue  # ignore invalid JSON entries
+                if isinstance(comment_json, dict) and 'task_id' in comment_json and \
+                    comment_json['task_id'] == task.task_id:
+                    return json.dumps(job_def, indent=4, sort_keys=True)
+        return None
 
 @register_scheduler('local')
-class LocalScheduler(Scheduler):
+class LocalScheduler(BaseScheduler):
     """A scheduler that uses a local subprocess"""
 
     def get_resources_for_task(self, task: ScheduledTask):
         return {'cpus': task.cpus, 'memory': task.memory}
 
     def run_task(self, task: ScheduledTask):
-        _run_command(list(map(str, task.program_args())), env=task.program_environment(), cwd=task.working_directory,
-                     capture_output=task.capture_output)
+        self._run_command(task, args=list(map(str, task.program_args())), env=task.program_environment(),
+                          cwd=task.working_directory,
+                          capture_output=task.capture_output)
 
 class SshSchedulerConfig(luigi.Config):
     @classmethod
@@ -165,7 +215,7 @@ class SshSchedulerConfig(luigi.Config):
 ssh_cfg = SshSchedulerConfig()
 
 @register_scheduler('ssh')
-class SshScheduler(Scheduler):
+class SshScheduler(BaseScheduler):
     """A scheduler that uses SSH to run a task remotely"""
 
     def get_resources_for_task(self, task: ScheduledTask):
@@ -185,5 +235,5 @@ class SshScheduler(Scheduler):
         args.append(ssh_cfg.remote)
         args.extend(map(str, ssh_cfg.extra_args))
         args.extend(map(str, task.program_args()))
-        _run_command(args, env=task.program_environment(), cwd=task.working_directory,
-                     capture_output=task.capture_output)
+        self._run_command(task, args=args, env=task.program_environment(), cwd=task.working_directory,
+                          capture_output=task.capture_output)
