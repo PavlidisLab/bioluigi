@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 cfg = bioluigi()
 
-_schedulers = {}
-
-class ScheduledTask(ABC):
+class ScheduledTask(ABC, luigi.Task):
     """Interface for Luigi tasks that can be scheduled."""
     walltime: timedelta
 
@@ -38,29 +36,6 @@ class ScheduledTask(ABC):
     @abstractmethod
     def program_args(self) -> list[str]:
         pass
-
-def get_available_schedulers():
-    return _schedulers.keys()
-
-def get_scheduler(blurb):
-    try:
-        return _schedulers[blurb]
-    except KeyError:
-        raise ValueError('Unsupported scheduler {}'.format(blurb))
-
-def register_scheduler(blurb):
-    """
-    :param blurb: Short name by with the scheduler is referred to
-    or if it should be done through Luigi's resource management system.
-    """
-
-    global _schedulers
-
-    def wrapper(cls):
-        _schedulers[blurb] = cls()
-        return cls
-
-    return wrapper
 
 def _run_command(args, env, cwd, capture_output):
     kwargs = {'env': env, 'universal_newlines': True}
@@ -92,14 +67,39 @@ class Scheduler(ABC):
     def run_task(self, task: ScheduledTask):
         pass
 
+_schedulers: dict[str, Scheduler] = {}
+
+def register_scheduler(blurb):
+    """
+    :param blurb: Short name by with the scheduler is referred to
+    or if it should be done through Luigi's resource management system.
+    """
+
+    global _schedulers
+
+    def wrapper(cls):
+        _schedulers[blurb] = cls()
+        return cls
+
+    return wrapper
+
+def get_available_schedulers():
+    return _schedulers.keys()
+
+def get_scheduler(blurb):
+    try:
+        return _schedulers[blurb]
+    except KeyError:
+        raise ValueError('Unsupported scheduler {}'.format(blurb))
+
 class SlurmSchedulerConfig(luigi.Config):
     @classmethod
     def get_task_family(cls):
         return 'bioluigi.schedulers.slurm'
 
     task_family = 'slurm'
-    srun_bin: str = luigi.Parameter('srun')
-    partition: str = luigi.OptionalParameter(default=None)
+    srun_bin: str = luigi.Parameter(default='srun')
+    partition: Optional[str] = luigi.OptionalParameter(default=None)
     extra_args: list[str] = luigi.ListParameter(default=[])
 
 slurm_cfg = SlurmSchedulerConfig()

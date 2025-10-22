@@ -48,8 +48,8 @@ class CutadaptTask(ScheduledExternalProgramTask):
     trim_n: bool = luigi.BoolParameter(default=False, positional=False)
     minimum_length: int = luigi.IntParameter(default=0, positional=False)
 
-    report_file: str = luigi.OptionalParameter(default=None, positional=False,
-                                               description='Destination for the JSON report')
+    report_file: Optional[str] = luigi.OptionalParameter(default=None, positional=False,
+                                                         description='Destination for the JSON report')
 
     @property
     def resources(self):
@@ -91,7 +91,7 @@ class TrimReads(CutadaptTask):
     output_file: str = luigi.Parameter()
 
     # temporary location for cutadapt output
-    _tmp_output_file: str = None
+    _tmp_output_file: Optional[str] = None
 
     def program_args(self):
         args = super().program_args()
@@ -115,8 +115,8 @@ class TrimPairedReads(CutadaptTask):
     reverse_adapter_5prime: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
     # temporary location for cutadapt output
-    _tmp_output_file: str = None
-    _tmp_output2_file: str = None
+    _tmp_output_file: Optional[str] = None
+    _tmp_output2_file: Optional[str] = None
 
     def program_args(self):
         args = super().program_args()
