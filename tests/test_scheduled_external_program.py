@@ -51,7 +51,7 @@ def test_slurm_scheduler():
     assert not task.complete()
     slurm_scheduler = get_scheduler('slurm')
     assert slurm_scheduler.get_task_status_message(task) == '''{
-    "comment": "{\\"task_id\\": \\"MyTask__99914b932b\\", \\"priority\\": 100}"
+    "comment": "MyTask__99914b932b"
 }'''
     luigi.build([task], local_scheduler=True)
     assert task.complete()

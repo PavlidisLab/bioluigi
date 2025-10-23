@@ -1,6 +1,7 @@
 import json
 import logging
 import subprocess
+import time
 from abc import abstractmethod, ABC
 from datetime import timedelta
 from subprocess import Popen
@@ -83,6 +84,9 @@ def get_scheduler(blurb):
     except KeyError:
         raise ValueError('Unsupported scheduler {}'.format(blurb))
 
+# in seconds
+_TASK_STATUS_UPDATE_FREQUENCY: float = 1
+
 class BaseScheduler(Scheduler):
     def _run_command(self, task: ScheduledTask, args, env, cwd, capture_output):
         kwargs = {'env': env, 'universal_newlines': True}
@@ -105,13 +109,13 @@ class BaseScheduler(Scheduler):
                     task.set_progress_percentage(progress_percentage)
                 try:
                     if capture_output:
-                        stderr, stdout = proc.communicate(timeout=1)
+                        stderr, stdout = proc.communicate(timeout=_TASK_STATUS_UPDATE_FREQUENCY)
                         if stdout:
-                            logger.info('Program stdout:\n{}'.format(stdout))
+                            logger.info('Program stdout:\n%s', stdout)
                         if stderr:
-                            logger.info('Program stderr:\n{}'.format(stderr))
+                            logger.info('Program stderr:\n%s', stderr)
                     else:
-                        proc.wait(1)
+                        proc.wait(_TASK_STATUS_UPDATE_FREQUENCY)
                     break
                 except subprocess.TimeoutExpired:
                     continue
@@ -155,7 +159,7 @@ class SlurmScheduler(BaseScheduler):
         args.extend([
             '--verbose',
             '--job-name', task.get_task_family(),
-            '--comment', json.dumps({'task_id': task.task_id, 'priority': task.priority}),
+            '--comment', task.task_id,
             '--time',
             '{}-{:02d}:{:02d}:{:02d}'.format(secs // 86400, (secs % 86400) // 3600, (secs % 3600) // 60, secs % 60),
             '--mem', '{}G'.format(int(task.memory)),
@@ -175,17 +179,40 @@ class SlurmScheduler(BaseScheduler):
         self._run_command(task, args=args, env=(task.program_environment()), cwd=task.working_directory,
                           capture_output=task.capture_output)
 
+    # cached output of squeue
+    _squeue_cache: str = None
+    _squeue_cache_last_updated: float = None
+    _squeue_cache_ttl: float = _TASK_STATUS_UPDATE_FREQUENCY  # in seconds
+
     def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
-        payload = json.loads(subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE, text=True).stdout)
-        for job_def in payload['jobs']:
-            if 'comment' in job_def:
-                try:
-                    comment_json = json.loads(job_def['comment'])
-                except json.JSONDecodeError:
-                    continue  # ignore invalid JSON entries
-                if isinstance(comment_json, dict) and 'task_id' in comment_json and \
-                    comment_json['task_id'] == task.task_id:
-                    return json.dumps(job_def, indent=4, sort_keys=True)
+        if self._squeue_cache is None or time.time() > (self._squeue_cache_last_updated + self._squeue_cache_ttl):
+            self._squeue_cache = subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
+                                                text=True).stdout
+            self._squeue_cache_last_updated = time.time()
+        try:
+            payload = json.loads(self._squeue_cache)
+        except json.JSONDecodeError:
+            logger.exception('Failed to decode squeue JSON output.')
+            return None
+        if not isinstance(payload, dict):
+            logger.error('Expected $ to be a dictionary.')
+            return None
+        if not 'jobs' in payload:
+            return None
+        if not isinstance(payload['jobs'], list):
+            logger.error('Expected $.jobs to be a list.')
+            return None
+        for job_def_i, job_def in enumerate(payload['jobs']):
+            if not isinstance(job_def, dict):
+                logger.error('Expected $.jobs[%d] to be a dictionary.', job_def_i)
+                return None
+            if 'comment' not in job_def:
+                continue
+            if not isinstance(job_def['comment'], str):
+                logger.error('Expected $.jobs[%d].comment to be a string.', job_def_i)
+                return None
+            if job_def['comment'] == task.task_id:
+                return json.dumps(job_def, indent=4, sort_keys=True)
         return None
 
 @register_scheduler('local')
