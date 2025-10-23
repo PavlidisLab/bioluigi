@@ -176,7 +176,7 @@ class SlurmScheduler(BaseScheduler):
         args.extend(map(str, slurm_cfg.extra_args))
         args.extend(map(str, task.scheduler_extra_args))
         args.extend(map(str, task.program_args()))
-        self._run_command(task, args=args, env=(task.program_environment()), cwd=task.working_directory,
+        self._run_command(task, args=args, env=(task.program_environment()), cwd=None,
                           capture_output=task.capture_output)
 
     # cached output of squeue
