@@ -63,8 +63,8 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     input_file: str = luigi.Parameter(description='A file path or a SRA archive, or a SRA run accession')
     output_dir: str = luigi.Parameter(description='Destination directory for the extracted FASTQs')
 
-    split: str = luigi.ChoiceParameter(default='three', choices=['three', 'files', 'spot'], positional=False,
-                                       description='Way to split the output files.')
+    split: Optional[str] = luigi.ChoiceParameter(default='three', choices=['three', 'files', 'spot'], positional=False,
+                                                 description='Way to split the output files.')
 
     clip: bool = luigi.BoolParameter(default=False, positional=False,
                                      description='Clip the reads to remove adapter sequences')
@@ -72,11 +72,13 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     minimum_read_length: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False,
                                                                     description='Minimum read length to be extracted from the archive')
 
-    number_of_reads_per_spot: Optional[int] = luigi.OptionalIntParameter(default=None, positional=False,
-                                                                         description='Number of reads per spot. This must be set when using split=files.')
-
     skip_technical: bool = luigi.BoolParameter(default=False, positional=False,
                                                description='Skip technical reads. Only applicable if using split=spot.')
+
+    min_spot_id: Optional[int] = luigi.OptionalIntParameter(default=None,
+                                                            description='Minimum spot ID to retrieve (inclusive)')
+    max_spot_id: Optional[int] = luigi.OptionalIntParameter(default=None,
+                                                            description='Maximum spot ID to retrieve (inclusive)')
 
     _tmp_output_dir: Optional[str] = None
 
@@ -101,14 +103,20 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
             args.append('--split-files')
         elif self.split == 'spot':
             args.append('--split-spot')
-        else:
+        elif self.split:
             raise ValueError('Invalid split option: ' + self.split)
 
         if self.skip_technical:
             args.append('--skip-technical')
 
         if self.minimum_read_length is not None:
-            args.extend(['-M', self.minimum_read_length])
+            args.extend(['-M', str(self.minimum_read_length)])
+
+        if self.min_spot_id is not None:
+            args.extend(['-N', str(self.min_spot_id)])
+
+        if self.max_spot_id is not None:
+            args.extend(['-X', str(self.max_spot_id)])
 
         # temp_output_dir is only set within a run() execution, so this is a
         # graceful fallback
@@ -119,29 +127,8 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+        with self.output().temporary_path() as self._tmp_output_dir:
             super().run()
 
     def output(self):
-        sra_accession, _ = splitext(basename(self.input_file))
-        if self.split == 'three':
-            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '.fastq.gz')),
-                    luigi.LocalTarget(join(self.output_dir, sra_accession + '_1.fastq.gz')),
-                    luigi.LocalTarget(join(self.output_dir, sra_accession + '_2.fastq.gz'))]
-        elif self.split == 'files':
-            if self.number_of_reads_per_spot is None:
-                raise ValueError(
-                    'If split_files is True, number_of_reads_per_spot must be set.')
-            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '_' + str(i + 1) + '.fastq.gz'))
-                    for i in range(self.number_of_reads_per_spot)]
-        elif self.split == 'spot':
-            return [luigi.LocalTarget(join(self.output_dir, sra_accession + '.fastq.gz'))]
-        else:
-            raise ValueError('Invalid split option: ' + self.split)
-
-    def complete(self):
-        if self.split == 'three':
-            se, r1, r2 = self.output()
-            return se.exists() or (r1.exists() and r2.exists())
-        else:
-            return super().complete()
+        return luigi.LocalTarget(self.output_dir)
