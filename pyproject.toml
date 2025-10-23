@@ -18,6 +18,9 @@ dependencies = ["click", "luigi", "python-daemon<3.0.0", "requests"]
 [project.urls]
 homepage = "https://github.com/pavlidisLab/bioluigi"
 
+[dependency-groups]
+dev = [ "pytest", "tox", "mypy", "types-requests" ]
+
 [tool.setuptools]
 packages = ["bioluigi"]
 
