@@ -9,7 +9,7 @@ payload = {
         {
         },
         {
-            "comment": json.dumps({"task_id": "MyTask__99914b932b", "priority": 100})
+            "comment": "MyTask__99914b932b"
         }
     ]
 }
