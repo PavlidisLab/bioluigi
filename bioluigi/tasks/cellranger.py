@@ -6,6 +6,7 @@ from typing import Optional
 import luigi
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -28,10 +29,10 @@ class CellRangerCountTarget(luigi.Target):
         self.raw_h5 = join(output_dir, 'outs/raw_feature_bc_matrix.h5')
 
         targets = []
-        targets.extend(luigi.LocalTarget(f) for f in self.filtered_mex)
-        targets.extend(luigi.LocalTarget(f) for f in self.raw_mex)
-        targets.append(luigi.LocalTarget(self.filtered_h5))
-        targets.append(luigi.LocalTarget(self.raw_h5))
+        targets.extend(LocalTarget(f) for f in self.filtered_mex)
+        targets.extend(LocalTarget(f) for f in self.raw_mex)
+        targets.append(LocalTarget(self.filtered_h5))
+        targets.append(LocalTarget(self.raw_h5))
         self._targets = targets
 
     def exists(self):
@@ -96,7 +97,7 @@ class CellRangerCount(ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+        with LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
             makedirs(self._tmp_output_dir)
             super().run()
 
@@ -127,4 +128,4 @@ class BamToFastq(ScheduledExternalProgramTask):
                 self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
 
     def output(self):
-        return luigi.LocalTarget(self.output_dir)
+        return LocalTarget(self.output_dir)

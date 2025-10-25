@@ -5,6 +5,7 @@ import luigi
 from luigi.util import requires
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -124,5 +125,5 @@ class CalculateExpression(ScheduledExternalProgramTask):
         return args
 
     def output(self):
-        return [luigi.LocalTarget('{}.isoforms.results'.format(self.sample_name)),
-                luigi.LocalTarget('{}.genes.results'.format(self.sample_name))]
+        return [LocalTarget('{}.isoforms.results'.format(self.sample_name)),
+                LocalTarget('{}.genes.results'.format(self.sample_name))]

@@ -3,10 +3,11 @@ from os.path import join
 
 import luigi
 
-import bioluigi.config
-from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
+from ..config import bioluigi
+from ..local_target import LocalTarget
+from ..scheduled_external_program import ScheduledExternalProgramTask
 
-cfg = bioluigi.config.bioluigi()
+cfg = bioluigi()
 
 class GenerateIndex(ScheduledExternalProgramTask):
     genome_fastas: list[str] = luigi.ListParameter()
@@ -76,5 +77,5 @@ class Align(ScheduledExternalProgramTask):
         return args
 
     def output(self):
-        return [luigi.LocalTarget(join(self.output_dir, 'Aligned.{}.out'.format(self.output_format))),
-                luigi.LocalTarget(join(self.output_dir, 'SJ.tab.out'))]
+        return [LocalTarget(join(self.output_dir, 'Aligned.{}.out'.format(self.output_format))),
+                LocalTarget(join(self.output_dir, 'SJ.tab.out'))]

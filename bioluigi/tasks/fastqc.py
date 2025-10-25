@@ -5,6 +5,7 @@ from typing import Optional
 import luigi
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -42,9 +43,9 @@ class GenerateReport(ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+        with LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
             makedirs(self._tmp_output_dir)
             return super().run()
 
     def output(self):
-        return luigi.LocalTarget(join(self.output_dir, self.gen_report_basename(self.input_file)))
+        return LocalTarget(join(self.output_dir, self.gen_report_basename(self.input_file)))

@@ -5,6 +5,7 @@ from typing import Optional
 import luigi
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -87,7 +88,7 @@ class View(BcftoolsTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Annotate(BcftoolsTask):
     """
@@ -126,7 +127,7 @@ class Annotate(BcftoolsTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Sort(BcftoolsTask):
     output_file = luigi.Parameter()
@@ -147,7 +148,7 @@ class Sort(BcftoolsTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Index(BcftoolsTask):
     """
@@ -158,7 +159,7 @@ class Index(BcftoolsTask):
         return ['index', '--tbi']
 
     def output(self):
-        return luigi.LocalTarget(self.input_file + '.tbi')
+        return LocalTarget(self.input_file + '.tbi')
 
 class Intersect(BcftoolsTask):
     input_file2: str = luigi.Parameter()
@@ -173,11 +174,11 @@ class Intersect(BcftoolsTask):
         return [self.input_file, self.input_file2]
 
     def run(self):
-        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+        with LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
             super().run()
 
     def output(self):
-        return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
+        return [LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
 
 class Merge(BcftoolsTask):
     """
@@ -215,4 +216,4 @@ class Merge(BcftoolsTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)

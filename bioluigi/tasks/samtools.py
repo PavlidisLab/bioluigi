@@ -1,6 +1,8 @@
 import luigi
 from luigi.contrib.external_program import ExternalProgramTask
 
+from ..local_target import LocalTarget
+
 class IndexBam(ExternalProgramTask):
     bam_file = luigi.Parameter()
 
@@ -8,4 +10,4 @@ class IndexBam(ExternalProgramTask):
         return ['samtools', 'index', self.bam_file]
 
     def output(self):
-        return luigi.LocalTarget('{}.bai'.format(self.bam_file))
+        return LocalTarget('{}.bai'.format(self.bam_file))
