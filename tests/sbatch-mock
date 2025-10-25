@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+import os
+import sys
+from shutil import which
+
+print('1232')
+
+os.execv(which(sys.argv[-2]), sys.argv[-2:])

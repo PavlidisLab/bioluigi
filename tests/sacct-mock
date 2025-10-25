@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+import json
+
+print(json.dumps([{
+    'job_id': 1234,
+    'job_state': 'COMPLETED'
+}]))

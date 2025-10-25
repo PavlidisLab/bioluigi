@@ -9,17 +9,19 @@ required to execute the task.
 
 import datetime
 import os
+from abc import ABC
 from datetime import timedelta
+from os.path import join
 from typing import Optional
 
 import luigi
 
 from .config import bioluigi
-from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask
+from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask, ScheduledArrayTask
 
 cfg = bioluigi()
 
-class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
+class ScheduledExternalProgramTask(ScheduledTask, luigi.Task, ABC):
     """
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.
@@ -42,9 +44,9 @@ class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
     memory: float = luigi.FloatParameter(default=1, positional=False, significant=False,
                                          description='Amount of memory (in gigabyte) to allocate for the task')
 
-    working_directory = luigi.OptionalParameter(default=None, significant=False, positional=False)
+    working_directory: Optional[str] = luigi.OptionalParameter(default=None, significant=False, positional=False)
 
-    capture_output = luigi.BoolParameter(default=True, significant=False, positional=False)
+    capture_output: bool = luigi.BoolParameter(default=True, significant=False, positional=False)
 
     def program_environment(self) -> dict[str, str]:
         env = os.environ.copy()
@@ -56,3 +58,35 @@ class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
 
     def run(self):
         get_scheduler(self.scheduler).run_task(self)
+
+class ScheduledExternalProgramArrayTask(ScheduledExternalProgramTask, ScheduledArrayTask, ABC):
+    array: list[str] = luigi.ListParameter(default=[],
+                                           description='Array of parameters to schedule the external program with')
+
+    array_task_batch_size = luigi.OptionalIntParameter(default=None, positional=False, significant=False)
+
+    def program_args_for_array_element(self, element, index):
+        """The default is to append the element and index to the program arguments."""
+        return self.program_args() + [str(element), str(index)]
+
+    def program_environment_for_array_element(self, element, index):
+        """The default is to include a $BIOLUIGI_SCHEDULED_ARRAY_TASK_ELEMENT and $BIOLUIGI_SCHEDULED_ARRAY_TASK_INDEX
+         environment variable that can be used within the program."""
+        env = self.program_environment()
+        env.update({'BIOLUIGI_SCHEDULED_ARRAY_TASK_ELEMENT': str(element)})
+        env.update({'BIOLUIGI_SCHEDULED_ARRAY_TASK_INDEX': str(index)})
+        return env
+
+    def working_directory_for_array_element(self, element, index):
+        """The default is a subdirectory of working_directory using the index if a working directory is set, else None."""
+        if self.working_directory:
+            return join(self.working_directory, str(index))
+        else:
+            return None
+
+    @property
+    def resources(self):
+        return get_scheduler(self.scheduler).get_resources_for_array_task(self)
+
+    def run(self):
+        get_scheduler(self.scheduler).run_array_task(self)
