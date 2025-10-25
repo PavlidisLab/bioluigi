@@ -1,6 +1,7 @@
 import json
 import logging
 import subprocess
+import threading
 import time
 from abc import abstractmethod, ABC
 from datetime import timedelta
@@ -98,15 +99,21 @@ class BaseScheduler(Scheduler):
         logger.info('Running command %s%s', ' '.join(args), 'in ' + cwd if cwd else '')
         proc = Popen(args, **kwargs)
         with ExternalProgramRunContext(proc):
+            last_tracking_url, last_status_message, last_progress_percentage = None, None, None
             while True:
                 # update task progress
                 if tracking_url := self.get_task_tracking_url(task):
-                    task.set_tracking_url(tracking_url)
+                    if tracking_url != last_tracking_url:
+                        task.set_tracking_url(tracking_url)
+                        last_tracking_url = tracking_url
                 if status_message := self.get_task_status_message(task):
-                    task.set_status_message(status_message)
-                if progress_percentage := self.get_task_progress_percentage(
-                    task) is not None:  # might also be zero
-                    task.set_progress_percentage(progress_percentage)
+                    if status_message != last_status_message:
+                        task.set_status_message(status_message)
+                        last_status_message = status_message
+                if progress_percentage := self.get_task_progress_percentage(task) is not None:  # might also be zero
+                    if progress_percentage != last_progress_percentage:
+                        task.set_progress_percentage(progress_percentage)
+                        last_progress_percentage = progress_percentage
                 try:
                     if capture_output:
                         stderr, stdout = proc.communicate(timeout=_TASK_STATUS_UPDATE_FREQUENCY)
@@ -180,17 +187,19 @@ class SlurmScheduler(BaseScheduler):
                           capture_output=task.capture_output)
 
     # cached output of squeue
+    _squeue_lock = threading.Lock()
     _squeue_cache: str = None
     _squeue_cache_last_updated: float = None
-    _squeue_cache_ttl: float = _TASK_STATUS_UPDATE_FREQUENCY  # in seconds
 
-    def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
-        if self._squeue_cache is None or time.time() > (self._squeue_cache_last_updated + self._squeue_cache_ttl):
-            self._squeue_cache = subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
-                                                text=True).stdout
-            self._squeue_cache_last_updated = time.time()
+    @classmethod
+    def _get_slurm_job_details(cls, task: ScheduledTask, ttl: float) -> Optional[dict]:
+        with cls._squeue_lock:
+            if cls._squeue_cache is None or time.time() > (cls._squeue_cache_last_updated + ttl):
+                cls._squeue_cache = subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
+                                                   text=True).stdout
+                cls._squeue_cache_last_updated = time.time()
         try:
-            payload = json.loads(self._squeue_cache)
+            payload = json.loads(cls._squeue_cache)
         except json.JSONDecodeError:
             logger.exception('Failed to decode squeue JSON output.')
             return None
@@ -212,8 +221,12 @@ class SlurmScheduler(BaseScheduler):
                 logger.error('Expected $.jobs[%d].comment to be a string.', job_def_i)
                 return None
             if job_def['comment'] == task.task_id:
-                return json.dumps(job_def, indent=4, sort_keys=True)
+                return job_def
         return None
+
+    def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
+        job_def = self._get_slurm_job_details(task, ttl=_TASK_STATUS_UPDATE_FREQUENCY)
+        return json.dumps(job_def, indent=4, sort_keys=True) if job_def else None
 
 @register_scheduler('local')
 class LocalScheduler(BaseScheduler):
