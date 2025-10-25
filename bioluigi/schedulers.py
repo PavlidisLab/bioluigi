@@ -98,6 +98,7 @@ class BaseScheduler(Scheduler):
             kwargs['cwd'] = cwd
         logger.info('Running command %s%s', ' '.join(args), 'in ' + cwd if cwd else '')
         proc = Popen(args, **kwargs)
+        stdout, stderr = None, None
         with ExternalProgramRunContext(proc):
             last_tracking_url, last_status_message, last_progress_percentage = None, None, None
             while True:
@@ -143,7 +144,6 @@ class SlurmSchedulerConfig(luigi.Config):
     def get_task_family(cls):
         return 'bioluigi.schedulers.slurm'
 
-    task_family = 'slurm'
     srun_bin: str = luigi.Parameter(default='srun')
     squeue_bin: str = luigi.Parameter(default='squeue')
     partition: Optional[str] = luigi.OptionalParameter(default=None)
