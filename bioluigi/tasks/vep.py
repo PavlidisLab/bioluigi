@@ -3,6 +3,7 @@ from typing import Optional
 import luigi
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -69,4 +70,4 @@ class Annotate(ScheduledExternalProgramTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.annotated_vcf_file)
+        return LocalTarget(self.annotated_vcf_file)

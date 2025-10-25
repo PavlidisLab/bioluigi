@@ -1,10 +1,10 @@
-from os.path import join, basename, splitext
 from typing import Optional
 
 import luigi
 
 from .utils import TaskWithMetadataMixin
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -45,7 +45,7 @@ class Prefetch(TaskWithMetadataMixin, ScheduledExternalProgramTask):
         return args
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
     """
@@ -131,4 +131,4 @@ class FastqDump(TaskWithMetadataMixin, ScheduledExternalProgramTask):
             super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_dir)
+        return LocalTarget(self.output_dir)

@@ -4,6 +4,7 @@ from typing import Optional
 import luigi
 
 from ..config import bioluigi
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
 cfg = bioluigi()
@@ -41,14 +42,14 @@ class GenerateReport(ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+        with LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
             try:
                 return super().run()
             finally:
                 self._did_run = True
 
     def output(self):
-        return luigi.LocalTarget(join(self.output_dir, 'multiqc_report.html'))
+        return LocalTarget(join(self.output_dir, 'multiqc_report.html'))
 
     def complete(self):
         # since we're forcing the task, we first ignore any existing completion state
