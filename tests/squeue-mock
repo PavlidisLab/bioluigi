@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+import json
+
+payload = {
+    "jobs": [
+        {
+            "job_id": 1231,
+            "comment": ""
+        },
+        {
+        },
+        {
+            "job_id": 1232,
+            "comment": "MyTask__99914b932b"
+        },
+        {
+            "job_id": 1234,
+            "job_state": ["COMPLETED"],
+            "comment": "MyArrayTask___a____b____c____9e20e8c949"
+        }
+    ]
+}
+
+print(json.dumps(payload))

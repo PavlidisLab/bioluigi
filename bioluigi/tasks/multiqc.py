@@ -1,4 +1,5 @@
 from os.path import join
+from typing import Optional
 
 import luigi
 
@@ -10,19 +11,22 @@ cfg = bioluigi()
 class GenerateReport(ScheduledExternalProgramTask):
     task_namespace = 'multiqc'
 
-    input_dirs = luigi.ListParameter()
-    output_dir = luigi.Parameter()
+    input_dirs: list[str] = luigi.ListParameter()
+    output_dir: str = luigi.Parameter()
 
-    sample_names = luigi.OptionalParameter(default=None, positional=False)
-    replace_names = luigi.OptionalParameter(default=None, positional=False)
+    sample_names: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    replace_names: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
-    title = luigi.OptionalParameter(default=None, positional=False)
-    comment = luigi.OptionalParameter(default=None, positional=False)
+    title: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    comment: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
 
-    force = luigi.BoolParameter(default=False, positional=False)
+    force: bool = luigi.BoolParameter(default=False, positional=False)
+
+    _tmp_output_dir: Optional[str] = None
+    _did_run: bool = False
 
     def program_args(self):
-        args = [cfg.multiqc_bin, '--outdir', self.output_dir]
+        args = [cfg.multiqc_bin, '--outdir', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
         if self.sample_names:
             args.extend(['--sample-names', self.sample_names])
         if self.replace_names:
@@ -37,16 +41,17 @@ class GenerateReport(ScheduledExternalProgramTask):
         return args
 
     def run(self):
-        try:
-            return super().run()
-        finally:
-            self._did_run = True
+        with luigi.LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+            try:
+                return super().run()
+            finally:
+                self._did_run = True
 
     def output(self):
         return luigi.LocalTarget(join(self.output_dir, 'multiqc_report.html'))
 
     def complete(self):
         # since we're forcing the task, we first ignore any existing completion state
-        if self.force and not hasattr(self, '_did_run'):
+        if self.force and not self._did_run:
             return False
         return super().complete()

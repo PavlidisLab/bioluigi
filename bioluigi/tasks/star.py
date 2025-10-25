@@ -1,4 +1,5 @@
 import urllib
+from os.path import join
 
 import luigi
 
@@ -8,8 +9,8 @@ from bioluigi.scheduled_external_program import ScheduledExternalProgramTask
 cfg = bioluigi.config.bioluigi()
 
 class GenerateIndex(ScheduledExternalProgramTask):
-    genome_fastas = luigi.ListParameter()
-    sjdb = luigi.Parameter()
+    genome_fastas: list[str] = luigi.ListParameter()
+    sjdb: str = luigi.Parameter()
 
     output_dir = luigi.Parameter()
 
@@ -33,14 +34,14 @@ class Align(ScheduledExternalProgramTask):
 
     :stranded: Whether the reads are strand-specific
     """
-    fastqs = luigi.ListParameter()
-    genome_dir = luigi.Parameter()
-    output_dir = luigi.Parameter()
+    fastqs: list[str] = luigi.ListParameter()
+    genome_dir: str = luigi.Parameter()
+    output_dir: str = luigi.Parameter()
 
-    output_format = luigi.ChoiceParameter(choices=['sam', 'bam'], default='sam')
-    sort_output = luigi.BoolParameter()
-    gzipped_reads = luigi.BoolParameter(default=True)
-    stranded_reads = luigi.BoolParameter(default=False)
+    output_format: str = luigi.ChoiceParameter(choices=['sam', 'bam'], default='sam')
+    sort_output: bool = luigi.BoolParameter()
+    gzipped_reads: bool = luigi.BoolParameter(default=True)
+    stranded_reads: bool = luigi.BoolParameter(default=False)
 
     # performance feature
     use_shared_memory = luigi.BoolParameter(default=True)

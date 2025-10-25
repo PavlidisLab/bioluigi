@@ -1,3 +1,5 @@
+from typing import Optional
+
 import luigi
 
 from ..config import bioluigi
@@ -25,12 +27,14 @@ class Annotate(ScheduledExternalProgramTask):
     species = luigi.Parameter(positional=False)
     assembly = luigi.Parameter(positional=False)
 
-    plugins = luigi.ListParameter(default=[], positional=False)
+    plugins: list[str] = luigi.ListParameter(default=[], positional=False)
 
-    extra_args = luigi.ListParameter(default=[])
+    extra_args: list[str] = luigi.ListParameter(default=[])
 
     output_format = luigi.ChoiceParameter(choices=['vcf', 'tab', 'json'], default='vcf')
     compress_output = luigi.ChoiceParameter(choices=['gzip', 'bgzip'], default='bgzip')
+
+    _tmp_output_file: Optional[str] = None
 
     def program_args(self):
         args = [cfg.vep_bin,
@@ -42,7 +46,7 @@ class Annotate(ScheduledExternalProgramTask):
                 '--assembly', self.assembly,
                 f'--{self.output_format}',
                 '--compress_output', self.compress_output,
-                '--output_file', self.output().path]
+                '--output_file', self._tmp_output_file if self._tmp_output_file else self.annotated_vcf_file]
 
         if self.cache:
             args.append('--cache')
@@ -59,6 +63,10 @@ class Annotate(ScheduledExternalProgramTask):
         args.extend(self.extra_args)
 
         return args
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
         return luigi.LocalTarget(self.annotated_vcf_file)

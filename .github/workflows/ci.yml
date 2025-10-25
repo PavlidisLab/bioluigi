@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
     - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
     - name: Install package
       run: pip install .
     - name: Create a test Luigi configuration
-      run: ln -s example.luigi.cfg luigi.cfg
+      run: cp tests/luigi.cfg ./
     - name: Test with pytest
       run: |
         pytest
