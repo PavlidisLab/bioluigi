@@ -226,12 +226,15 @@ class SlurmScheduler(BaseScheduler):
 
     def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
         job_def = self._get_slurm_job_details(task, ttl=_TASK_STATUS_UPDATE_FREQUENCY)
-        keys = ["job_id", "job_state", "user_name", "user_id", "current_working_directory", "start_time", "submit_time", "comment"]
-        job_def_filtered = {}
-        for key in keys:
-            if key in job_def:
-                job_def_filtered[key] = job_def[key]
-        return json.dumps(job_def_filtered, indent=4, sort_keys=True)
+        if job_def:
+            keys = ["job_id", "job_state", "user_name", "user_id", "current_working_directory", "start_time", "submit_time", "comment"]
+            job_def_filtered = {}
+            for key in keys:
+                if key in job_def:
+                    job_def_filtered[key] = job_def[key]
+            return json.dumps(job_def_filtered, indent=4, sort_keys=True)
+        else:
+            return None
 
 @register_scheduler('local')
 class LocalScheduler(BaseScheduler):
