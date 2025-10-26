@@ -1,6 +1,12 @@
 import luigi
 
-class bioluigi(luigi.Config):
+class BioluigiConfig(luigi.Config):
+    """Bioluigi configuration"""
+
+    @classmethod
+    def get_task_family(cls):
+        return 'bioluigi'
+
     scheduler = luigi.Parameter(default='local',
                                 description='Default scheduler to use in ScheduledExternalProgram')
     scheduler_partition = luigi.OptionalParameter(default=None,
@@ -19,3 +25,9 @@ class bioluigi(luigi.Config):
     multiqc_bin = luigi.Parameter(default='multiqc')
     cellranger_bin = luigi.Parameter(default='cellranger')
     bamtofastq_bin = luigi.Parameter(default='bamtofastq')
+
+# for backward compatibility, use Bioluig
+bioluigi = BioluigiConfig
+"""
+Kept for backward-compatibility, use BioluigiConfig instead
+"""

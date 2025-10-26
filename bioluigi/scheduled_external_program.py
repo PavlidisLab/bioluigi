@@ -14,10 +14,10 @@ from typing import Optional
 
 import luigi
 
-from .config import bioluigi
+from .config import BioluigiConfig
 from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask
 
-cfg = bioluigi()
+cfg = BioluigiConfig()
 
 class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
     """

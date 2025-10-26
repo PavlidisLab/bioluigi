@@ -1,7 +1,10 @@
 import luigi
 from luigi.contrib.external_program import ExternalProgramTask
 
+from ..config import BioluigiConfig
 from ..local_target import LocalTarget
+
+cfg = BioluigiConfig()
 
 class IndexBam(ExternalProgramTask):
     bam_file = luigi.Parameter()

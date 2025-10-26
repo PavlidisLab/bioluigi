@@ -5,11 +5,11 @@ from typing import Optional
 
 import luigi
 
-from ..config import bioluigi
+from ..config import BioluigiConfig
 from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
-cfg = bioluigi()
+cfg = BioluigiConfig()
 
 class CellRangerCountTarget(luigi.Target):
     def __init__(self, output_dir):

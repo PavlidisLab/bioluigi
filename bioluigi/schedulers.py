@@ -11,11 +11,11 @@ from typing import Optional
 import luigi
 from luigi.contrib.external_program import ExternalProgramRunError, ExternalProgramRunContext
 
-from .config import bioluigi
+from .config import BioluigiConfig
 
 logger = logging.getLogger(__name__)
 
-cfg = bioluigi()
+cfg = BioluigiConfig()
 
 class ScheduledTask(ABC, luigi.Task):
     """Interface for Luigi tasks that can be scheduled."""
