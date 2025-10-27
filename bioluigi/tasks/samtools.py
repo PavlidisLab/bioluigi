@@ -10,7 +10,7 @@ class IndexBam(ExternalProgramTask):
     bam_file = luigi.Parameter()
 
     def program_args(self):
-        return ['samtools', 'index', self.bam_file]
+        return [cfg.samtools_bin, 'index', self.bam_file]
 
     def output(self):
         return LocalTarget('{}.bai'.format(self.bam_file))
