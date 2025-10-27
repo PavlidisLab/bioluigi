@@ -9,6 +9,7 @@ required to execute the task.
 
 import datetime
 import os
+from abc import ABC
 from datetime import timedelta
 from typing import Optional
 
@@ -19,7 +20,7 @@ from .schedulers import get_available_schedulers, get_scheduler, ScheduledTask
 
 cfg = BioluigiConfig()
 
-class ScheduledExternalProgramTask(ScheduledTask, luigi.Task):
+class ScheduledExternalProgramTask(ScheduledTask, ABC):
     """
     Variant of :class:`luigi.contrib.external_program.ExternalProgramTask` that
     executes the task with a :class:`Scheduler`.
