@@ -1,27 +1,31 @@
+from abc import abstractmethod, ABC
 from os.path import join
+from typing import Optional
 
 import luigi
 
-from ..config import bioluigi
+from ..config import BioluigiConfig
+from ..local_target import LocalTarget
 from ..scheduled_external_program import ScheduledExternalProgramTask
 
-cfg = bioluigi()
+cfg = BioluigiConfig()
 
-class BcftoolsTask(ScheduledExternalProgramTask):
+class BcftoolsTask(ScheduledExternalProgramTask, ABC):
     task_namespace = 'bcftools'
 
-    input_file = luigi.Parameter()
+    input_file: str = luigi.Parameter()
 
-    include = luigi.OptionalParameter(positional=False, default=None)
-    exclude = luigi.OptionalParameter(positional=False, default=None)
-    regions = luigi.ListParameter(default=[], positional=False)
-    regions_file = luigi.OptionalParameter(positional=False, default=None)
-    samples = luigi.ListParameter(default=[], positional=False)
-    samples_file = luigi.OptionalParameter(default=None, positional=False)
-    apply_filters = luigi.OptionalParameter(positional=False, default=None)
+    include: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    exclude: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    regions: list[str] = luigi.ListParameter(default=[], positional=False)
+    regions_file: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+    samples: list[str] = luigi.ListParameter(default=[], positional=False)
+    samples_file: Optional[str] = luigi.OptionalParameter(default=None, positional=False)
+    apply_filters: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
     # FIXME: the '--threads' flag does not seem to work
 
+    @abstractmethod
     def subcommand_args(self):
         """Returns specific sub-command arguments."""
         raise NotImplementedError
@@ -72,27 +76,35 @@ class View(BcftoolsTask):
     output_file = luigi.Parameter()
     output_format = luigi.Parameter(positional=False, default='z')
 
+    _tmp_output_file: Optional[str] = None
+
     def subcommand_args(self):
         return ['view',
                 '--output-type', self.output_format,
-                '--output-file', self.output_file]
+                '--output-file', self._tmp_output_file if self._tmp_output_file else self.output_file]
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Annotate(BcftoolsTask):
     """
     Annotate a VCF using bcftools annotate.
     """
-    output_file = luigi.Parameter()
-    output_format = luigi.Parameter(positional=False, default='z')
+    output_file: str = luigi.Parameter()
+    output_format: str = luigi.Parameter(positional=False, default='z')
 
     # options given an annotation file
-    annotations_file = luigi.OptionalParameter(positional=False, default=None)
+    annotations_file: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
 
-    columns = luigi.ListParameter(positional=False, default=[])
+    columns: list[str] = luigi.ListParameter(positional=False, default=[])
 
-    rename_chrs = luigi.OptionalParameter(positional=False, default=None)
+    rename_chrs: Optional[str] = luigi.OptionalParameter(positional=False, default=None)
+
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         args = ['annotate']
@@ -106,12 +118,16 @@ class Annotate(BcftoolsTask):
 
         args.extend([
             '--output-type', self.output_format,
-            '--output', self.output_file])
+            '--output-file', self._tmp_output_file if self._tmp_output_file else self.output_file])
 
         return args
 
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
+
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Sort(BcftoolsTask):
     output_file = luigi.Parameter()
@@ -119,14 +135,20 @@ class Sort(BcftoolsTask):
 
     tmp_dir = luigi.Parameter(default='/tmp', significant=False)
 
+    _tmp_output_file: Optional[str] = None
+
     def subcommand_args(self):
         return ['sort',
                 '--temp-dir', self.tmp_dir,
                 '--output-type', self.output_format,
-                '--output', self.output_file]
+                '--output', self._tmp_output_file if self._tmp_output_file else self.output_file]
+
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
 
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
 
 class Index(BcftoolsTask):
     """
@@ -137,20 +159,26 @@ class Index(BcftoolsTask):
         return ['index', '--tbi']
 
     def output(self):
-        return luigi.LocalTarget(self.input_file + '.tbi')
+        return LocalTarget(self.input_file + '.tbi')
 
 class Intersect(BcftoolsTask):
-    input_file2 = luigi.Parameter()
-    output_dir = luigi.Parameter()
+    input_file2: str = luigi.Parameter()
+    output_dir: str = luigi.Parameter()
+
+    _tmp_output_dir: Optional[str] = None
 
     def subcommand_args(self):
-        return ['isec', '-p', self.output_dir]
+        return ['isec', '-p', self._tmp_output_dir if self._tmp_output_dir else self.output_dir]
 
     def subcommand_input_args(self):
         return [self.input_file, self.input_file2]
 
+    def run(self):
+        with LocalTarget(self.output_dir).temporary_path() as self._tmp_output_dir:
+            super().run()
+
     def output(self):
-        return [luigi.LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
+        return [LocalTarget(join(self.output_dir, '000{}.vcf.gz'.format(i))) for i in range(4)]
 
 class Merge(BcftoolsTask):
     """
@@ -158,11 +186,13 @@ class Merge(BcftoolsTask):
     """
     input_file = luigi.ListParameter()
 
-    filter_logic = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
-    info_rules = luigi.ListParameter(default=[], positional=False)
+    filter_logic: str = luigi.ChoiceParameter(default='+', choices=['x', '+'], positional=False)
+    info_rules: list[str] = luigi.ListParameter(default=[], positional=False)
 
-    output_file = luigi.Parameter()
-    output_format = luigi.Parameter(positional=False, default='z')
+    output_file: str = luigi.Parameter()
+    output_format: str = luigi.Parameter(positional=False, default='z')
+
+    _tmp_output_file: Optional[str] = None
 
     def subcommand_args(self):
         args = ['merge']
@@ -174,12 +204,16 @@ class Merge(BcftoolsTask):
 
         args.extend([
             '--output-type', self.output_format,
-            '--output', self.output_file])
+            '--output', self._tmp_output_file if self._tmp_output_file else self.output_file])
 
         return args
 
     def subcommand_input_args(self):
         return self.input_file
 
+    def run(self):
+        with self.output().temporary_path() as self._tmp_output_file:
+            super().run()
+
     def output(self):
-        return luigi.LocalTarget(self.output_file)
+        return LocalTarget(self.output_file)
