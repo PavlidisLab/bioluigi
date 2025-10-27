@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 cfg = BioluigiConfig()
 
-class ScheduledTask(ABC, luigi.Task):
+class ScheduledTask(luigi.Task, ABC):
     """Interface for Luigi tasks that can be scheduled."""
     walltime: timedelta
 
