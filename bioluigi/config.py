@@ -25,6 +25,7 @@ class BioluigiConfig(luigi.Config):
     vep_dir = luigi.OptionalParameter(default=None)
     multiqc_bin = luigi.Parameter(default='multiqc')
     cellranger_bin = luigi.Parameter(default='cellranger')
+    cellranger_arc_bin = luigi.Parameter(default='cellranger-arc')
     bamtofastq_bin = luigi.Parameter(default='bamtofastq')
 
 # for backward compatibility, use Bioluig
