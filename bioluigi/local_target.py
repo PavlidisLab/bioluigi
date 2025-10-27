@@ -32,3 +32,6 @@ class LocalTarget(luigi.LocalTarget):
             raise
         # We won't reach here if there was an user exception.
         self.fs.rename_dont_move(_temp_path, self.path)
+
+    def __repr__(self):
+        return f'LocalTarget(path={self.path}, format={self.format}, fs={self.fs})'
