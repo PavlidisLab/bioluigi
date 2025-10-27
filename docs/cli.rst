@@ -43,7 +43,7 @@ Forgive a failed task which will update its status to ``PENDING``.
 .. code-block:: bash
 
    bioluigi forgive [--recursive] TASK_ID
-   
+
 - ``TASK_ID`` is a task identifier.
 - ``--recursive`` recursively forgive the task dependencies
 
@@ -58,3 +58,12 @@ Re-enable a disabled task which will update its status to ``FAILED``.
 
 - ``TASK_ID`` is a task identifier.
 - ``--recursive`` recursively re-enable the task dependencies
+
+Submit a task
+-------------
+
+As a convenience, you can use the Bioluigi CLI to submit any Luigi task with the ``submit`` subcommand.
+
+.. code-block:: bash
+
+    bioluigi submit TASK_DEF

@@ -2,5 +2,27 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "bioluigi"
+version = "0.2.1"
+authors = [
+    {name = "Guillaume Poirier-Morency", email = "poirigui@msl.ubc.ca"}
+]
+description = "Reusable and maintained Luigi tasks to incorporate in bioinformatics pipelines"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+dependencies = ["click", "luigi", "python-daemon<3.0.0", "requests"]
+
+[project.urls]
+homepage = "https://github.com/pavlidisLab/bioluigi"
+
+[dependency-groups]
+dev = ["pytest", "tox", "mypy", "types-requests", "sphinx", "sphinx_rtd_theme", "m2r2", "mistune==0.8.4"]
+
+[tool.setuptools]
+packages = ["bioluigi", "bioluigi.tasks"]
+
 [tool.mypy]
 plugins = ["luigi.mypy"]
