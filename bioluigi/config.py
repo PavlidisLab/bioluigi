@@ -19,6 +19,7 @@ class BioluigiConfig(luigi.Config):
     fastqc_bin = luigi.Parameter(default='fastqc')
     star_bin = luigi.Parameter(default='STAR')
     rsem_dir = luigi.Parameter(default='')
+    samtools_bin = luigi.Parameter(default='samtools')
     bcftools_bin = luigi.Parameter(default='bcftools')
     vep_bin = luigi.Parameter(default='vep')
     vep_dir = luigi.OptionalParameter(default=None)
