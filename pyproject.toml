@@ -21,6 +21,9 @@ homepage = "https://github.com/pavlidisLab/bioluigi"
 [dependency-groups]
 dev = ["pytest", "tox", "mypy", "types-requests", "sphinx", "sphinx_rtd_theme", "m2r2", "mistune==0.8.4"]
 
+[scripts]
+bioluigi = "bioluigi.cli:main"
+
 [tool.setuptools]
 packages = ["bioluigi", "bioluigi.tasks"]
 
