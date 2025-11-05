@@ -27,9 +27,15 @@ class LocalTarget(luigi.LocalTarget):
         try:
             yield _temp_path
         except:
+            # this forces NFS to synchronize the file
+            self.fs.listdir(tmp_dir)
             if self.fs.exists(_temp_path):
                 self.fs.remove(_temp_path)
             raise
+
+        # this forces NFS to synchronize the file
+        self.fs.listdir(tmp_dir)
+
         # We won't reach here if there was an user exception.
         self.fs.rename_dont_move(_temp_path, self.path)
 
