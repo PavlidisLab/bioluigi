@@ -188,21 +188,22 @@ class SlurmScheduler(BaseScheduler):
 
     # cached output of squeue
     _squeue_lock = threading.Lock()
-    _squeue_cache: str = None
+    _squeue_cache: dict = None
     _squeue_cache_last_updated: float = None
 
     @classmethod
     def _get_slurm_job_details(cls, task: ScheduledTask, ttl: float) -> Optional[dict]:
         with cls._squeue_lock:
             if cls._squeue_cache is None or time.time() > (cls._squeue_cache_last_updated + ttl):
-                cls._squeue_cache = subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
-                                                   text=True).stdout
+                try:
+                    cls._squeue_cache = json.loads(
+                        subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
+                                       text=True).stdout)
+                except json.JSONDecodeError:
+                    logger.exception('Failed to decode squeue JSON output.')
+                    return None
                 cls._squeue_cache_last_updated = time.time()
-        try:
-            payload = json.loads(cls._squeue_cache)
-        except json.JSONDecodeError:
-            logger.exception('Failed to decode squeue JSON output.')
-            return None
+        payload = cls._squeue_cache
         if not isinstance(payload, dict):
             logger.error('Expected $ to be a dictionary.')
             return None
@@ -227,7 +228,8 @@ class SlurmScheduler(BaseScheduler):
     def get_task_status_message(self, task: ScheduledTask) -> Optional[str]:
         job_def = self._get_slurm_job_details(task, ttl=_TASK_STATUS_UPDATE_FREQUENCY)
         if job_def:
-            keys = ["job_id", "job_state", "user_name", "user_id", "current_working_directory", "start_time", "submit_time", "comment"]
+            keys = ["job_id", "job_state", "user_name", "user_id", "current_working_directory", "start_time",
+                    "submit_time", "comment"]
             job_def_filtered = {}
             for key in keys:
                 if key in job_def:
