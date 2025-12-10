@@ -100,33 +100,45 @@ class BaseScheduler(Scheduler):
         proc = Popen(args, **kwargs)
         stdout, stderr = None, None
         with ExternalProgramRunContext(proc):
-            last_tracking_url, last_status_message, last_progress_percentage = None, None, None
-            while True:
-                # update task progress
-                if tracking_url := self.get_task_tracking_url(task):
-                    if tracking_url != last_tracking_url:
-                        task.set_tracking_url(tracking_url)
-                        last_tracking_url = tracking_url
-                if status_message := self.get_task_status_message(task):
-                    if status_message != last_status_message:
-                        task.set_status_message(status_message)
-                        last_status_message = status_message
-                if progress_percentage := self.get_task_progress_percentage(task) is not None:  # might also be zero
-                    if progress_percentage != last_progress_percentage:
-                        task.set_progress_percentage(progress_percentage)
-                        last_progress_percentage = progress_percentage
-                try:
-                    if capture_output:
-                        stderr, stdout = proc.communicate(timeout=_TASK_STATUS_UPDATE_FREQUENCY)
-                        if stdout:
-                            logger.info('Program stdout:\n%s', stdout)
-                        if stderr:
-                            logger.info('Program stderr:\n%s', stderr)
-                    else:
-                        proc.wait(_TASK_STATUS_UPDATE_FREQUENCY)
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
+            if slurm_cfg.track_job_status:
+                logger.info('Tracking task status updates from Slurm every %.1f seconds.',
+                            _TASK_STATUS_UPDATE_FREQUENCY)
+                last_tracking_url, last_status_message, last_progress_percentage = None, None, None
+                while True:
+                    # update task progress
+                    if tracking_url := self.get_task_tracking_url(task):
+                        if tracking_url != last_tracking_url:
+                            task.set_tracking_url(tracking_url)
+                            last_tracking_url = tracking_url
+                    if status_message := self.get_task_status_message(task):
+                        if status_message != last_status_message:
+                            task.set_status_message(status_message)
+                            last_status_message = status_message
+                    if progress_percentage := self.get_task_progress_percentage(task) is not None:  # might also be zero
+                        if progress_percentage != last_progress_percentage:
+                            task.set_progress_percentage(progress_percentage)
+                            last_progress_percentage = progress_percentage
+                    try:
+                        if capture_output:
+                            stderr, stdout = proc.communicate(timeout=_TASK_STATUS_UPDATE_FREQUENCY)
+                            if stdout:
+                                logger.info('Program stdout:\n%s', stdout)
+                            if stderr:
+                                logger.info('Program stderr:\n%s', stderr)
+                        else:
+                            proc.wait(_TASK_STATUS_UPDATE_FREQUENCY)
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+            else:
+                if capture_output:
+                    stderr, stdout = proc.communicate()
+                    if stdout:
+                        logger.info('Program stdout:\n%s', stdout)
+                    if stderr:
+                        logger.info('Program stderr:\n%s', stderr)
+                else:
+                    proc.wait()
         if proc.returncode != 0:
             raise ExternalProgramRunError('Program exited with non-zero return code.', tuple(args), env, stdout, stderr)
 
@@ -148,6 +160,7 @@ class SlurmSchedulerConfig(luigi.Config):
     squeue_bin: str = luigi.Parameter(default='squeue')
     partition: Optional[str] = luigi.OptionalParameter(default=None)
     extra_args: list[str] = luigi.ListParameter(default=[])
+    track_job_status: bool = luigi.BoolParameter(default=False)
 
 slurm_cfg = SlurmSchedulerConfig()
 
@@ -199,10 +212,12 @@ class SlurmScheduler(BaseScheduler):
                     cls._squeue_cache = json.loads(
                         subprocess.run([slurm_cfg.squeue_bin, '--json'], stdout=subprocess.PIPE,
                                        text=True).stdout)
+                    cls._squeue_cache_last_updated = time.time()
                 except json.JSONDecodeError:
                     logger.exception('Failed to decode squeue JSON output.')
                     return None
-                cls._squeue_cache_last_updated = time.time()
+            else:
+                logger.debug('Reusing cached squeue --json output')
         payload = cls._squeue_cache
         if not isinstance(payload, dict):
             logger.error('Expected $ to be a dictionary.')
