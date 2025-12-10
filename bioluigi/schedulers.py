@@ -86,7 +86,7 @@ def get_scheduler(blurb):
         raise ValueError('Unsupported scheduler {}'.format(blurb))
 
 # in seconds
-_TASK_STATUS_UPDATE_FREQUENCY: float = 1
+_TASK_STATUS_UPDATE_FREQUENCY: float = 10
 
 class BaseScheduler(Scheduler):
     def _run_command(self, task: ScheduledTask, args, env, cwd, capture_output):
