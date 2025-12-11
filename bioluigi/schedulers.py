@@ -156,11 +156,14 @@ class SlurmSchedulerConfig(luigi.Config):
     def get_task_family(cls):
         return 'bioluigi.schedulers.slurm'
 
-    srun_bin: str = luigi.Parameter(default='srun')
-    squeue_bin: str = luigi.Parameter(default='squeue')
-    partition: Optional[str] = luigi.OptionalParameter(default=None)
-    extra_args: list[str] = luigi.ListParameter(default=[])
-    track_job_status: bool = luigi.BoolParameter(default=False)
+    srun_bin: str = luigi.Parameter(default='srun', description='Path to the srun executable.')
+    squeue_bin: str = luigi.Parameter(default='squeue', description='Path to the squeue executable.')
+    partition: Optional[str] = luigi.OptionalParameter(default=None,
+                                                       description='Slurm partition to use by default. This can be overwritten by setting scheduler_partition in the task definition.')
+    extra_args: list[str] = luigi.ListParameter(default=[],
+                                                description='Extra arguments to pass to srun when submitting a job.')
+    track_job_status: bool = luigi.BoolParameter(default=False,
+                                                 description='Track job status update from Slurm. This is disabled by default because it is expensive.')
 
 slurm_cfg = SlurmSchedulerConfig()
 
