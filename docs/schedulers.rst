@@ -41,6 +41,9 @@ SSH
 
 The SSH scheduler allows to run external programs on a remote host.
 
+The SSH scheduler consumes two resources: ``ssh_cpus`` and ``ssh_memory`` which
+should be set according to the remote host capabilities.
+
 .. code-block:: ini
 
     [resources]
@@ -57,6 +60,8 @@ The SSH scheduler allows to run external programs on a remote host.
 
 Slurm
 =====
+
+The Slurm scheduler allows to dispatch external programs on a `Slurm <https://slurm.schedmd.com/>`_ cluster
 
 Unlike the local scheduler, no resource allocation is performed via Luigi
 resource mechanism. Instead, two resources are consumed: ``slurm_jobs`` and
